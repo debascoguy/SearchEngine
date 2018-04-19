@@ -6,8 +6,11 @@
  * Time: 11:32 AM
  */
 
+include dirname(__FILE__).DIRECTORY_SEPARATOR."Autoloader.php";
+
+
 /**
- * SEARCH STRING : The strings to be search inside the database.
+ * SEARCH STRING : The strings to be search inside the database (Boolean Search).
  */
 $searchString = "debascoguy@yahoo.com OR debascoguy@gmail.com NOT ademola";
 
@@ -104,6 +107,9 @@ $searchEngine = $searchEngine->reset();
 $result3 = $searchEngine->add($fileSystemLoadDB)->search()->getResult();
 
 
+echo "<h3>EXAMPLE 1 - SEARCH RESULT</h3>";
 var_dump($result);
+echo "<h3>EXAMPLE 2 - SEARCH RESULT</h3>";
 var_dump($result2);
+echo "<h3>EXAMPLE 3 - SEARCH RESULT</h3>";
 var_dump($result3);
