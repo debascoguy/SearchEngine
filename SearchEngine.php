@@ -7,7 +7,6 @@
  * Time: 10:55 AM
  */
 class SearchEngine_SearchEngine implements
-    ElementMvc_ServiceManager_ServiceLocatorInterface,
     SearchEngine_Interface_Search
 {
     /**
@@ -117,11 +116,11 @@ class SearchEngine_SearchEngine implements
                 $word = array_pop($chunkOfTerms);
                 $str_concat = implode(" ", $chunkOfTerms);
                 $result = $dictionary->autoSuggest($word, $str_concat);
-                return new ElementMvc_Http_JsonResponse($result);
+                return json_encode($result);
 
             case self::AUTO_SPELL_CHECK :
                 $result = $dictionary->autoSpellCheck($term);
-                return new ElementMvc_Http_JsonResponse(array("correction" => $result));
+                return json_encode(array("correction" => $result));
 
             default :
                 $chunkOfTerms = explode(" ", $term);
@@ -129,7 +128,7 @@ class SearchEngine_SearchEngine implements
                 $str_concat = implode(" ", $chunkOfTerms);
                 $result = $dictionary->autoSuggest($word, $str_concat);
                 $sentenceCorrection = array("correction" => $dictionary->autoSpellCheck($term));
-                return new ElementMvc_Http_JsonResponse(array_unshift($result, $sentenceCorrection));
+                return json_encode(array_unshift($result, $sentenceCorrection));
         }
     }
 
