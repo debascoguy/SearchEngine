@@ -6,7 +6,7 @@
  * Time: 11:32 AM
  */
 
-include dirname(__FILE__).DIRECTORY_SEPARATOR."Autoloader.php";
+include dirname(__FILE__).DIRECTORY_SEPARATOR."autoloader.php";
 
 
 /**
