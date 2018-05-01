@@ -1,11 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: ademola.aina
- * Date: 7/3/2015
- * Time: 8:45 AM
- */
 
+/**
+ * Class SearchEngine_Src_DictionaryManager
+ */
 class SearchEngine_Src_DictionaryManager
 {
     /**
@@ -13,16 +10,25 @@ class SearchEngine_Src_DictionaryManager
      */
     protected $searchEngineConfig;
 
-    private $directory,
-            $extension = "txt";
+    /**
+     * @var string
+     */
+    private $directory;
 
+    /**
+     * @var string
+     */
+    private $extension = "txt";
+
+    /**
+     * @method pspell_new_config
+     */
     private $pspell_dictionary;
 
     public function __construct()
     {
-        $this->setSearchEngineConfig(ElementMvc_App_Config::getSearchEngineConfigs());
-        $this->setDirectory($this->getSearchEngineConfig()->offsetGet("dictionary"));
-        $this->setExtension("txt");
+        $this->setSearchEngineConfig(new ArrayIterator((array)include_once dirname(dirname(__FILE__))."/config/config.php"));
+        $this->setDirectory($this->getSearchEngineConfig()->offsetGet("dictionary"))->setExtension("txt");
     }
 
     /**
@@ -141,6 +147,10 @@ class SearchEngine_Src_DictionaryManager
     {
         $content = $this->loadByFirstLetter($word[0]);
         if ($content != null) {
+            /** if *word* already exist, return TRUE */
+            if(in_array(strtolower($word), array_map('strtolower', $content))){
+                return true;
+            }
             $content[] = $word;
             sort($content);
             $content = array_unique($content);
@@ -242,32 +252,13 @@ class SearchEngine_Src_DictionaryManager
     }
 
     /**
-     * @param $String
-     * @param $elem
-     * @return bool
-     */
-    private function containsIgnoreCase($String, $elem)
-    {
-        if (is_array($String)) {
-            return in_arrayi($elem, $String) ? true : false;
-        } else {
-            return (stripos($String, $elem) !== false) ? true : false;
-        }
-    }
-
-    /**
      * @param $word
      * @return bool
      */
     public function wordExist($word)
     {
-        $possible_keywords = $this->loadByFirstLetter($word[0]);
-        foreach ((array)$possible_keywords as $line_number => $lineWord) {
-            if ($this->containsIgnoreCase($lineWord, $word)) {
-                return true;
-            }
-        }
-        return false;
+        $content = $this->loadByFirstLetter($word[0]);
+        return in_array(strtolower($word), array_map('strtolower', $content));
     }
 
     /**
@@ -276,7 +267,7 @@ class SearchEngine_Src_DictionaryManager
      */
     public function autoCorrectWord($word)
     {
-        return SpellCorrector::correct($word);
+        return SearchEngine_Src_SpellCorrector_SpellCorrector::correct($word);
     }
 
 

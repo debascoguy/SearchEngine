@@ -39,7 +39,7 @@ class SearchEngine_Services_CallBackHandler
         elseif (is_callable($callback)) {
             $this->callback = $callback;
         }
-        /** TODO This can be removed once we're in 5.3. */
+        /** TODO This can be removed if PHP_VERSION >= 5.3. */
         elseif (is_callable(array($callback, '__invoke'))){
             $this->callback = $callback;
         }
@@ -66,7 +66,7 @@ class SearchEngine_Services_CallBackHandler
 
         $argCount = count($args);
 
-        // Minor performance tweak; use call_user_func() until > 3 arguments reached
+        /** TODO: performance tweak; use call_user_func() until > 3 arguments reached */
         switch ($argCount) {
             case 0:
                 return call_user_func($callback);
