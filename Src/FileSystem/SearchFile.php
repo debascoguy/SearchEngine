@@ -127,7 +127,7 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
 
                     if ($SearchOption->isGroupResultByFilePath())
                     {
-                        $result[$filePath]["found"] .= ElementMvc_Stdlib_String::strip_space($found, " ")."/n";
+                        $result[$filePath]["found"] .= preg_replace('/\s+/', " ", $found)."/n";
                         $result[$filePath]["count"] += $totalResult;
                         $result[$filePath]["filePath"] = $filePath;
                     }
