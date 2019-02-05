@@ -128,10 +128,10 @@ class SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
 
             $quoteMatch = array();
             if (!empty($replaceOpenQuote) && !empty($replaceClosingQuote)) {
-                preg_match("/\"(ElementMvc_?)\"|'(ElementMvc_?)'/", $string, $quoteMatch);
+                preg_match("/\"(ElementMvc_?)\"|'(.*?)'/", $string, $quoteMatch);
             }
             if (count($quoteMatch[0]) > 0) {
-                $stringTerm .= preg_replace("/\"(ElementMvc_?)\"|'(ElementMvc_?)'/", "$replaceOpenQuote$1$replaceClosingQuote",
+                $stringTerm .= preg_replace("/\"(.*?)\"|'(.*?)'/", "$replaceOpenQuote$1$replaceClosingQuote",
                         $string) . " ";
             } else {
                 if (!in_array($string, array("AND", "OR", "NOT"))) {
