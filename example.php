@@ -16,6 +16,7 @@ $searchString = "debascoguy@yahoo.com OR debascoguy@gmail.com NOT ademola";
 
 /**
  * CREATE MYSQL CONNECTION
+ * USING the SearchEngine Connection Object 
  */
 $connection = mysqli_connect("localhost", "root", "", "test_database");
 
@@ -57,7 +58,7 @@ $mysqlLoadDB = new SearchEngine_Src_MySql_MySqlLoadDB(
         SearchEngine_Src_SentenceAnalyzer_MysqlFullText::IN_BOOLEAN_MODE
     )
 );
-$mysqlLoadDB->registerResultCallBack(array($this, 'toString'));
+$mysqlLoadDB->registerResultCallBack("array_filter");
 //Now, Search
 $searchEngine = new SearchEngine_SearchEngine();
 $searchEngine->add($mysqlLoadDB)->registerResultCallBack(function($searchResult){
