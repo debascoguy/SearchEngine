@@ -1,7 +1,7 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: element
+ * Created By: Ademola Aina
+ * Email: debascoguy@gmail.com
  * Date: 4/17/2018
  * Time: 11:32 AM
  */
@@ -10,19 +10,55 @@ include dirname(__FILE__).DIRECTORY_SEPARATOR."autoloader.php";
 
 
 /**
- * SEARCH STRING : The strings to be search inside the database (Boolean Search).
+ * CREATE MYSQL CONNECTION
  */
+$connection = SearchEngine_Src_MySql_Connection::getInstance(new SearchEngine_Src_MySql_ConnectionProperty("localhost", "root", "", "test_database"));
+
+
+
+/**
+ * EXAMPLE 1: standard example
+ * =====================================================================================================================
+ */
+
+/**     SEARCH STRING : The strings to be search inside the database (Boolean Search).  */
 $searchString = "debascoguy@yahoo.com OR debascoguy@gmail.com NOT ademola";
 
-/**
- * CREATE MYSQL CONNECTION
- * USING the SearchEngine Connection Object 
- */
-$connection = mysqli_connect("localhost", "root", "", "test_database");
+$mysqlLoadDB = new SearchEngine_Src_MySql_MySqlLoadDB(
+    $connection,
+    new SearchEngine_Src_MySql_QueryBuilder(),
+    new SearchEngine_Src_SentenceAnalyzer_MysqlFullText(
+        $searchString, array("login_session.email", "login_session.username"),
+        SearchEngine_Src_SentenceAnalyzer_MysqlFullText::IN_BOOLEAN_MODE
+    )
+);
+
+//Register a Call Back that will be excuted at the time the Query Results are been fetched directly from the Database (Optional).
+$mysqlLoadDB->registerResultCallBack(array($this, 'toString'));
+
+//Now, Search
+$searchEngine = new SearchEngine_SearchEngine();
+$searchEngine->add($mysqlLoadDB)
+//    Register a callback on the Search Engine before viewing of final results (Optional)...
+    ->registerResultCallBack(function($searchResult){
+//    Duplicate the search to increase the total number of result... Just an example of how to add an inline callback.
+    while(count($searchResult) < 4095){
+        $result2 = $searchResult;
+        $searchResult = array_merge($searchResult, $result2);
+    }
+    return $searchResult;
+});
+
+$result = $searchEngine->search()->getResult();
+
+
 
 /**
- * USING QUERY BUILDER TO BUILD YOUR SEARCH QUERY...
+ * EXAMPLE 2 : Test of Using Multiple DataSource By creating another MysqlLoadDB()
+ * =====================================================================================================================
  */
+
+/**     USING QUERY BUILDER TO BUILD YOUR SEARCH QUERY...   */
 $mysqlQueryBuilder = new SearchEngine_Src_MySql_QueryBuilder();
 $mysqlQueryBuilder->select(array(
     /** login.email As loginEmail : Use this if duplicate column exist. */
@@ -30,7 +66,6 @@ $mysqlQueryBuilder->select(array(
     "login.username" => "loginUsername",
     "login_session.email",
     "login_session.username",
-    "login_session.priv_level",
 ))->from("login")
     ->leftJoin("login_session", "login.email = login_session.email")
     ->where("login.email", "IN", "('debascoguy@gmail.com', 'debascoguy@yahoo.com')")
@@ -41,40 +76,11 @@ $mysqlQueryBuilder->select(array(
     ->selectColumn("login.username", "loginUsername")
     ->selectColumn("login_session.email")
     ->selectColumn("login_session.username")
-    ->selectColumn("login_session.priv_level")
     ->from("login")
     ->leftJoin("login_session", "login.email = login_session.email")
     ->where("login.email", "IN", "('debascoguy@gmail.com', 'debascoguy@yahoo.com')");
 
 
-/**
- * EXAMPLE 1: standard example
- */
-$mysqlLoadDB = new SearchEngine_Src_MySql_MySqlLoadDB(
-    $connection,
-    $mysqlQueryBuilder,
-    new SearchEngine_Src_SentenceAnalyzer_MysqlFullText(
-        $searchString, array("login_session.email", "login_session.username"),
-        SearchEngine_Src_SentenceAnalyzer_MysqlFullText::IN_BOOLEAN_MODE
-    )
-);
-$mysqlLoadDB->registerResultCallBack("array_filter");
-//Now, Search
-$searchEngine = new SearchEngine_SearchEngine();
-$searchEngine->add($mysqlLoadDB)->registerResultCallBack(function($searchResult){
-    while(count($searchResult) < 4095){
-        $result2 = $searchResult;
-        $searchResult = array_merge($searchResult, $result2);
-    }
-    return $searchResult;
-});
-$result = $searchEngine->search()->getResult();
-
-
-
-/**
- * EXAMPLE 2 : Test of Using Multiple DataSource By creating another MysqlLoadDB()
- */
 $mysqlLoadDB2 = new SearchEngine_Src_MySql_MySqlLoadDB(
     $connection,
     $mysqlQueryBuilder,
