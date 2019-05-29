@@ -3,13 +3,10 @@
 /**
  * Class SearchEngine_Src_MySql_QueryBuilder
  */
-class SearchEngine_Src_MySql_QueryBuilder
-implements
-    SearchEngine_Interface_MysqlQueryBuilder,
-    ElementMvc_ServiceManager_FactoryInterface
+class SearchEngine_Src_MySql_QueryBuilder implements SearchEngine_Interface_MysqlQueryBuilder, ElementMvc_ServiceManager_FactoryInterface
 {
     /**
-     * @var ElementMvc_DataFactory_MySql_Connection
+     * @var SearchEngine_Src_MySql_Connection
      */
     private $connection;
 
@@ -87,7 +84,7 @@ implements
     const DESC = "DESC";
 
     /**
-     * @var string
+     * @var array
      */
     protected $orderBy;
 
@@ -183,7 +180,7 @@ implements
     }
 
     /**
-     * @return ElementMvc_DataFactory_MySql_Connection
+     * @return SearchEngine_Src_MySql_Connection
      */
     public function getConnection()
     {
@@ -191,7 +188,7 @@ implements
     }
 
     /**
-     * @param ElementMvc_DataFactory_MySql_Connection $connection
+     * @param SearchEngine_Src_MySql_Connection $connection
      * @return SearchEngine_Src_MySql_QueryBuilder
      */
     public function setConnection($connection)
@@ -454,7 +451,7 @@ implements
     }
 
     /**
-     * @return string
+     * @return array
      */
     public function getOrderBy()
     {
@@ -462,12 +459,25 @@ implements
     }
 
     /**
+     * @param array $orderBy
+     * @return SearchEngine_Src_MySql_QueryBuilder
+     */
+    public function setOrderBy($orderBy)
+    {
+        $this->orderBy = $orderBy;
+        return $this;
+    }
+
+
+    /**
      * @param $tableColumn
      * @param string $sort
+     * @return $this
      */
     public function orderBy($tableColumn, $sort = self::ASC)
     {
-        $this->orderBy = $tableColumn." ".$sort;
+        $this->orderBy[] = $tableColumn." ".$sort;
+        return $this;
     }
 
     /**
@@ -563,8 +573,8 @@ implements
         }
 
         $orderBy = $this->getOrderBy();
-        if (!empty($orderBy) && stripos($query, "ORDER BY")!==false) {
-            $query .= " ".$orderBy;
+        if (!empty($orderBy)) {
+            $query .= " ".implode(", ", $orderBy);
         }
 
         $limit = $this->getLimit();

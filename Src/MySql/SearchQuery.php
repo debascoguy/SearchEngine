@@ -1,13 +1,12 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: element
+ * Created By: Ademola Aina
+ * Email: debascoguy@gmail.com
  * Date: 2/7/2018
  * Time: 11:59 PM
  */
-class SearchEngine_Src_MySql_SearchQuery implements
-    SearchEngine_Interface_MysqlSearchQuery
+class SearchEngine_Src_MySql_SearchQuery implements SearchEngine_Interface_MysqlSearchQuery
 {
     /**
      * @var SearchEngine_Src_MySql_QueryBuilder

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: element
+ * Created By: Ademola Aina
+ * Email: debascoguy@gmail.com
  * Date: 1/29/2018
  * Time: 11:32 PM
  */
@@ -12,7 +12,7 @@ class SearchEngine_Src_MySql_MySqlLoadDB implements
     Countable
 {
     /**
-     * @var ElementMvc_DataFactory_MySql_Connection
+     * @var SearchEngine_Src_MySql_Connection
      */
     private $connection;
 
@@ -37,11 +37,11 @@ class SearchEngine_Src_MySql_MySqlLoadDB implements
     private $resultCallBacks  = null;
 
     /**
-     * @param ElementMvc_DataFactory_MySql_Connection|null $connection
+     * @param SearchEngine_Src_MySql_Connection|null $connection
      * @param SearchEngine_Src_MySql_QueryBuilder|null $QueryBuilder
      * @param SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer|null $sentenceAnalyzer
      */
-    public function __construct(ElementMvc_DataFactory_MySql_Connection $connection = null,
+    public function __construct(SearchEngine_Src_MySql_Connection $connection = null,
                                 SearchEngine_Src_MySql_QueryBuilder $QueryBuilder = null,
                                 SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer $sentenceAnalyzer = null
 
@@ -153,7 +153,7 @@ class SearchEngine_Src_MySql_MySqlLoadDB implements
     }
 
     /**
-     * @return ElementMvc_DataFactory_MySql_Connection
+     * @return SearchEngine_Src_MySql_Connection
      */
     public function getConnection()
     {
@@ -161,7 +161,7 @@ class SearchEngine_Src_MySql_MySqlLoadDB implements
     }
 
     /**
-     * @param ElementMvc_DataFactory_MySql_Connection $connection
+     * @param SearchEngine_Src_MySql_Connection $connection
      * @return $this
      */
     public function setConnection($connection)
