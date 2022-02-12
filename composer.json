@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SearchEngine": "Src/"
+            "SearchEngine\\": "Src/"
         }
     },
     "license": "GPL-2.0-only"
