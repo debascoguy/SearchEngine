@@ -1,16 +1,24 @@
 <?php
 
+namespace SearchEngine;
+
+use SearchEngine\Interfaces\Search;
+use SearchEngine\Services\CallBackHandler;
+use SearchEngine\Src\DictionaryManager;
+use SearchEngine\Src\FileSystem\CtrlF;
+use SearchEngine\Src\Ranking\EditDistance;
+use SearchEngine\Src\Ranking\RankingData;
+
 /**
- * Created by PhpStorm.
- * User: element
+ * @Author: Ademola Aina
+ * Email: debascoguy@gmail.com
  * Date: 1/30/2018
  * Time: 10:55 AM
  */
-class SearchEngine_SearchEngine implements
-    SearchEngine_Interface_Search
+class SearchEngine implements Search
 {
     /**
-     * @var SearchEngine_Interface_Search[]|array
+     * @var Search[]|array
      */
     protected $loadDB;
 
@@ -20,12 +28,12 @@ class SearchEngine_SearchEngine implements
     protected $result = array();
 
     /**
-     * @var SearchEngine_Services_CallBackHandler[]|array
+     * @var CallBackHandler[]|array
      */
-    private $resultCallBacks  = null;
+    private $resultCallBacks = null;
 
     /**
-     * @var SearchEngine_Src_DictionaryManager
+     * @var DictionaryManager
      */
     protected $DictionaryManager;
 
@@ -38,7 +46,7 @@ class SearchEngine_SearchEngine implements
      */
     public function __construct()
     {
-        $this->setDictionaryManager(new SearchEngine_Src_DictionaryManager());
+        $this->setDictionaryManager(new DictionaryManager());
     }
 
     /**
@@ -49,28 +57,32 @@ class SearchEngine_SearchEngine implements
         $searchResult = array();
         $LoadDBs = $this->getLoadDB();
         $count = count($LoadDBs);
-        switch($count)
-        {
-            case 0 :    $searchResult =    array("No Search Result!");
-                        break;
-            case 1 :    $searchResult =    $LoadDBs[0]->search()->getResult();
-                        break;
-            case 2 :    $searchResult =    array_merge($LoadDBs[0]->search()->getResult(),
-                                                    $LoadDBs[1]->search()->getResult()
-                                        );
-                        break;
-            case 3 :    $searchResult =    array_merge($LoadDBs[0]->search()->getResult(),
-                                                    $LoadDBs[1]->search()->getResult(),
-                                                    $LoadDBs[2]->search()->getResult()
-                                        );
-                        break;
-            default: /** @Multiple LoadDB Sources */
-                        foreach($LoadDBs as $loadDB){
-                            $searchResult = array_merge($searchResult, $loadDB->search()->getResult());
-                        }
+        switch ($count) {
+            case 0 :
+                $searchResult = array("No Search Result!");
+                break;
+            case 1 :
+                $searchResult = $LoadDBs[0]->search()->getResult();
+                break;
+            case 2 :
+                $searchResult = array_merge($LoadDBs[0]->search()->getResult(),
+                    $LoadDBs[1]->search()->getResult()
+                );
+                break;
+            case 3 :
+                $searchResult = array_merge($LoadDBs[0]->search()->getResult(),
+                    $LoadDBs[1]->search()->getResult(),
+                    $LoadDBs[2]->search()->getResult()
+                );
+                break;
+            default:
+                /** @Multiple LoadDB Sources */
+                foreach ($LoadDBs as $loadDB) {
+                    $searchResult = array_merge($searchResult, $loadDB->search()->getResult());
+                }
         }
 
-        if (!empty($this->resultCallBacks) && !empty($searchResult) ){
+        if (!empty($this->resultCallBacks) && !empty($searchResult) && $count > 0) {
             $searchResult = $this->handleResultCallBacks($searchResult);
         }
         return $this->setResult($searchResult);
@@ -85,7 +97,7 @@ class SearchEngine_SearchEngine implements
      */
     public static function calculateEditDistance($str1, $str2)
     {
-        $editDistance = new SearchEngine_Src_Ranking_EditDistance($str1, $str2);
+        $editDistance = new EditDistance($str1, $str2);
         return $editDistance->result();
     }
 
@@ -95,22 +107,21 @@ class SearchEngine_SearchEngine implements
      * @param $editDist
      * @return float|int of Final Ranking Result.
      */
-    public static function getRanking($string1, $string2, $editDist=0)
+    public static function getRanking($string1, $string2, $editDist = 0)
     {
-        $rankingSystem = new SearchEngine_Src_Ranking_RankingData($string1, $string2, $editDist);
+        $rankingSystem = new RankingData($string1, $string2, $editDist);
         return $rankingSystem->result();
     }
 
     /**
      * @param $term
      * @param $action
-     * @return ElementMvc_Http_JsonResponse
+     * @return String
      */
-    public function autoSuggest($term, $action)
+    public function autoSuggest($term, $action = null)
     {
         $dictionary = $this->getDictionaryManager();
-        switch($action)
-        {
+        switch ($action) {
             case self::AUTO_SUGGEST :
                 $chunkOfTerms = explode(" ", $term);
                 $word = array_pop($chunkOfTerms);
@@ -133,6 +144,16 @@ class SearchEngine_SearchEngine implements
     }
 
     /**
+     * @param $term
+     * @return String
+     */
+    public function autoSpellCheck($term)
+    {
+        return $this->autoSuggest($term, self::AUTO_SPELL_CHECK);
+    }
+
+
+    /**
      * @return array
      */
     public function getResult()
@@ -142,7 +163,7 @@ class SearchEngine_SearchEngine implements
 
     /**
      * @param array $result
-     * @return SearchEngine_SearchEngine
+     * @return SearchEngine
      */
     public function setResult($result)
     {
@@ -156,10 +177,8 @@ class SearchEngine_SearchEngine implements
      */
     public function handleResultCallBacks($searchResult)
     {
-        if (!empty($searchResult))
-        {
-            foreach($this->resultCallBacks as $callable)
-            {
+        if (!empty($searchResult)) {
+            foreach ($this->resultCallBacks as $callable) {
                 $arguments = array_merge(array($searchResult), (array)$callable->getMetadata());
                 $searchResult = $callable->call($arguments);
             }
@@ -174,12 +193,12 @@ class SearchEngine_SearchEngine implements
      */
     public function registerResultCallBack($callable, $arguments = array())
     {
-        $this->resultCallBacks[] = new SearchEngine_Services_CallBackHandler($callable, $arguments);
+        $this->resultCallBacks[] = new CallBackHandler($callable, $arguments);
         return $this;
     }
 
     /**
-     * @return array|SearchEngine_Services_CallBackHandler[]
+     * @return array|CallBackHandler[]
      */
     public function getResultCallBacks()
     {
@@ -196,11 +215,11 @@ class SearchEngine_SearchEngine implements
     }
 
     /**
-     * @return ArrayIterator
+     * @return \ArrayIterator
      */
-    public function getIterator()
+    public function getIterator(): \ArrayIterator
     {
-        return new ArrayIterator((array)$this->result);
+        return new \ArrayIterator((array)$this->result);
     }
 
     /**
@@ -214,11 +233,11 @@ class SearchEngine_SearchEngine implements
 
     /**
      * @param $IndexPointerToLoadDB
-     * @return null|SearchEngine_Interface_Search|SearchEngine_Src_FileSystem_CtrlF
+     * @return null|Search|CtrlF
      */
     public function get($IndexPointerToLoadDB)
     {
-        if ($this->has($IndexPointerToLoadDB)){
+        if ($this->has($IndexPointerToLoadDB)) {
             return $this->loadDB[$IndexPointerToLoadDB];
         }
         return null;
@@ -226,17 +245,17 @@ class SearchEngine_SearchEngine implements
 
 
     /**
-     * @param SearchEngine_Interface_Search $LoadDB
+     * @param Search $LoadDB
      * @return $this
      */
-    public function add(SearchEngine_Interface_Search $LoadDB)
+    public function add(Search $LoadDB)
     {
         $this->loadDB[] = $LoadDB;
         return $this;
     }
 
     /**
-     * @return SearchEngine_Interface_Search[]
+     * @return Search[]
      */
     public function getLoadDB()
     {
@@ -244,7 +263,7 @@ class SearchEngine_SearchEngine implements
     }
 
     /**
-     * @param SearchEngine_Interface_Search[] $loadDB
+     * @param Search[] $loadDB
      * @return $this
      */
     public function setLoadDB($loadDB)
@@ -255,7 +274,7 @@ class SearchEngine_SearchEngine implements
 
     /**
      * @param bool|true $resetCallBack
-     * @return $this
+     * @return SearchEngine
      */
     public function reset($resetCallBack = true)
     {
@@ -265,7 +284,7 @@ class SearchEngine_SearchEngine implements
     }
 
     /**
-     * @return SearchEngine_Src_DictionaryManager
+     * @return DictionaryManager
      */
     public function getDictionaryManager()
     {
@@ -273,8 +292,8 @@ class SearchEngine_SearchEngine implements
     }
 
     /**
-     * @param SearchEngine_Src_DictionaryManager $DictionaryManager
-     * @return SearchEngine_SearchEngine
+     * @param DictionaryManager $DictionaryManager
+     * @return SearchEngine
      */
     public function setDictionaryManager($DictionaryManager)
     {

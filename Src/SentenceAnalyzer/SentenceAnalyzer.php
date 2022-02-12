@@ -1,6 +1,8 @@
 <?php
 
-class SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
+namespace SearchEngine\Src\SentenceAnalyzer;
+
+class SentenceAnalyzer
 {
     /**
      * @var string
@@ -34,7 +36,7 @@ class SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
 
     /**
      * @param mixed $originalSearchString
-     * @return SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
+     * @return SentenceAnalyzer
      */
     public function setOriginalSearchString($originalSearchString)
     {
@@ -76,16 +78,17 @@ class SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
     {
         switch ($analyzer) {
             case self::mysqlRegexSearch     :
-                return new SearchEngine_Src_SentenceAnalyzer_MysqlRegex($terms);
+                return new MysqlRegex($terms);
             case self::mysqlLikeSearch      :
-                return new SearchEngine_Src_SentenceAnalyzer_MysqlLike($terms);
+                return new MysqlLike($terms);
             case self::mysqlFullTextSearch  :
-                return new SearchEngine_Src_SentenceAnalyzer_MysqlFullText($terms);
+                return new MysqlFullText($terms);
             default                         :
+                $recommendedAnalyzer = 0;
                 $terms = self::handlesStringQuotes($terms, "", "", $recommendedAnalyzer);
                 /** @var sentenceAnalyzer $Analyzer */
                 $Analyzer = self::getAnalyzer($terms, $recommendedAnalyzer);
-                if ($Analyzer instanceof SearchEngine_Src_SentenceAnalyzer_MysqlFullText){
+                if ($Analyzer instanceof MysqlFullText) {
                     $Analyzer->setIsStringQuotesHandled(true);
                 }
                 return $Analyzer;
@@ -115,22 +118,22 @@ class SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
             //Format Phone to what we have in tables.
             preg_match('/\([0-9]{3}\)[\s][0-9]{3}[\-][0-9]{4}|[0-9]{3}[\-][0-9]{6}|[0-9]{3}[\s][0-9]{6}|[0-9]{3}[\s][0-9]{3}[\s][0-9]{4}|[0-9]{10}|[0-9]{3}[\-][0-9]{3}[\-][0-9]{4}/',
                 $string, $subMatches);
-            if (count($subMatches[0]) > 0) {
+            if (!empty($subMatches[0])) {
                 $string = str_replace(array(" ", "-", "(", ")"), "", $string);
             }
             $checkEmail = trim(preg_replace("/(\(|\))/i", "", $string));
-            if (filter_var($checkEmail, FILTER_VALIDATE_EMAIL) !== false){
-                $string = str_replace($checkEmail, '"'.$checkEmail.'"', $string);
+            if (filter_var($checkEmail, FILTER_VALIDATE_EMAIL) !== false) {
+                $string = str_replace($checkEmail, '"' . $checkEmail . '"', $string);
             }
-            if (is_numeric($string)){
+            if (is_numeric($string)) {
                 $recommendedAnalyzer = self::mysqlLikeSearch;
             }
 
             $quoteMatch = array();
             if (!empty($replaceOpenQuote) && !empty($replaceClosingQuote)) {
-                preg_match("/\"(ElementMvc_?)\"|'(.*?)'/", $string, $quoteMatch);
+                preg_match("/\"(.*?)\"|'(.*?)'/", $string, $quoteMatch);
             }
-            if (count($quoteMatch[0]) > 0) {
+            if (!empty($quoteMatch[0])) {
                 $stringTerm .= preg_replace("/\"(.*?)\"|'(.*?)'/", "$replaceOpenQuote$1$replaceClosingQuote",
                         $string) . " ";
             } else {
@@ -173,7 +176,7 @@ class SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
 
     /**
      * @param string $terms
-     * @return SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
+     * @return SentenceAnalyzer
      */
     public function setTerms($terms)
     {

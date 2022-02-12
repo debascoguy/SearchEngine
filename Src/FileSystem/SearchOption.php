@@ -1,9 +1,13 @@
 <?php
 
+namespace SearchEngine\Src\FileSystem;
+
+use SearchEngine\Interfaces\FileSystemDataSource;
+
 /**
- * Class SearchEngine_Src_FileSystem_SearchOption
+ * Class SearchOption
  */
-class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface_FileSystemDataSource
+class SearchOption implements FileSystemDataSource
 {
     /**
      * @var string
@@ -36,7 +40,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
     protected $groupResultByFilePath = false;
 
     /**
-     * SearchEngine_Src_FileSystem_SearchOption constructor.
+     * SearchOption constructor.
      * @param string $filePath
      * @param string $searchString
      * @param bool|false $caseSensitive
@@ -68,7 +72,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
 
     /**
      * @param string $filePath
-     * @return SearchEngine_Src_FileSystem_SearchOption
+     * @return SearchOption
      */
     public function setFilePath($filePath)
     {
@@ -86,7 +90,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
 
     /**
      * @param string $searchString
-     * @return SearchEngine_Src_FileSystem_SearchOption
+     * @return SearchOption
      */
     public function setSearchString($searchString)
     {
@@ -104,7 +108,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
 
     /**
      * @param boolean $caseSensitive
-     * @return SearchEngine_Src_FileSystem_SearchOption
+     * @return SearchOption
      */
     public function setCaseSensitive($caseSensitive)
     {
@@ -122,7 +126,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
 
     /**
      * @param boolean $highlightResult
-     * @return SearchEngine_Src_FileSystem_SearchOption
+     * @return SearchOption
      */
     public function setHighlightResult($highlightResult)
     {
@@ -140,7 +144,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
 
     /**
      * @param string $highlightResultColor
-     * @return SearchEngine_Src_FileSystem_SearchOption
+     * @return SearchOption
      */
     public function setHighlightResultColor($highlightResultColor)
     {
@@ -158,7 +162,7 @@ class SearchEngine_Src_FileSystem_SearchOption implements SearchEngine_Interface
 
     /**
      * @param boolean $groupResultByFilePath
-     * @return SearchEngine_Src_FileSystem_SearchOption
+     * @return SearchOption
      */
     public function setGroupResultByFilePath($groupResultByFilePath)
     {

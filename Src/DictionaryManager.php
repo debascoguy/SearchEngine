@@ -1,12 +1,14 @@
 <?php
+namespace SearchEngine\Src;
+use SearchEngine\Src\SpellCorrector\SpellCorrector;
 
 /**
  * Class SearchEngine_Src_DictionaryManager
  */
-class SearchEngine_Src_DictionaryManager
+class DictionaryManager
 {
     /**
-     * @var ArrayIterator
+     * @var \ArrayIterator
      */
     protected $searchEngineConfig;
 
@@ -27,12 +29,12 @@ class SearchEngine_Src_DictionaryManager
 
     public function __construct()
     {
-        $this->setSearchEngineConfig(new ArrayIterator((array)include_once dirname(dirname(__FILE__))."/config/config.php"));
+        $this->setSearchEngineConfig(new \ArrayIterator((array)include_once dirname(dirname(__FILE__)) . "/config/config.php"));
         $this->setDirectory($this->getSearchEngineConfig()->offsetGet("dictionary"))->setExtension("txt");
     }
 
     /**
-     * @return ArrayIterator
+     * @return \ArrayIterator
      */
     public function getSearchEngineConfig()
     {
@@ -40,8 +42,8 @@ class SearchEngine_Src_DictionaryManager
     }
 
     /**
-     * @param ArrayIterator $searchEngineConfig
-     * @return SearchEngine_Src_DictionaryManager
+     * @param \ArrayIterator $searchEngineConfig
+     * @return DictionaryManager
      */
     public function setSearchEngineConfig($searchEngineConfig)
     {
@@ -59,7 +61,7 @@ class SearchEngine_Src_DictionaryManager
 
     /**
      * @param string $extension
-     * @return SearchEngine_Src_DictionaryManager
+     * @return DictionaryManager
      */
     public function setExtension($extension)
     {
@@ -77,7 +79,7 @@ class SearchEngine_Src_DictionaryManager
 
     /**
      * @param mixed $directory
-     * @return SearchEngine_Src_DictionaryManager
+     * @return DictionaryManager
      */
     public function setDirectory($directory)
     {
@@ -148,7 +150,7 @@ class SearchEngine_Src_DictionaryManager
         $content = $this->loadByFirstLetter($word[0]);
         if ($content != null) {
             /** if *word* already exist, return TRUE */
-            if(in_array(strtolower($word), array_map('strtolower', $content))){
+            if (in_array(strtolower($word), array_map('strtolower', $content))) {
                 return true;
             }
             $content[] = $word;
@@ -219,7 +221,7 @@ class SearchEngine_Src_DictionaryManager
      */
     public function loadAndAdd($filepath = null)
     {
-        if (file_exists($filepath)) {
+        if (!is_null($filepath) && file_exists($filepath)) {
             $content = file($filepath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             return $this->addWordsArray($content);
         }
@@ -267,7 +269,7 @@ class SearchEngine_Src_DictionaryManager
      */
     public function autoCorrectWord($word)
     {
-        return SearchEngine_Src_SpellCorrector_SpellCorrector::correct($word);
+        return SpellCorrector::correct($word);
     }
 
 
@@ -359,7 +361,7 @@ class SearchEngine_Src_DictionaryManager
      */
     public function getPspellDictionary()
     {
-        if (empty($this->pspell_dictionary)){
+        if (empty($this->pspell_dictionary)) {
             $this->setPspellDictionary($this->pspell_config());
         }
         return $this->pspell_dictionary;
@@ -367,7 +369,7 @@ class SearchEngine_Src_DictionaryManager
 
     /**
      * @param mixed $pspell_dictionary
-     * @return SearchEngine_Src_DictionaryManager
+     * @return DictionaryManager
      */
     public function setPspellDictionary($pspell_dictionary)
     {

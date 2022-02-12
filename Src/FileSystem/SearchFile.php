@@ -1,12 +1,16 @@
 <?php
 
+namespace SearchEngine\Src\FileSystem;
+
+use SearchEngine\Interfaces\FileSystemDataSource;
+
 /**
- * Class SearchEngine_Src_FileSystem_SearchFile
+ * Class SearchFile
  */
-class SearchEngine_Src_FileSystem_SearchFile implements Countable
+class SearchFile implements \Countable
 {
     /**
-     * @var SearchEngine_Interface_FileSystemDataSource
+     * @var FileSystemDataSource
      */
     protected $SearchOption;
 
@@ -21,16 +25,16 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
     protected $count = 0;
 
     /**
-     * SearchEngine_Src_FileSystem_SearchFile constructor.
-     * @param SearchEngine_Interface_FileSystemDataSource $SearchOption
+     * SearchFile constructor.
+     * @param FileSystemDataSource $SearchOption
      */
-    public function __construct(SearchEngine_Interface_FileSystemDataSource $SearchOption = null)
+    public function __construct(FileSystemDataSource $SearchOption = null)
     {
         $this->SearchOption = $SearchOption;
     }
 
     /**
-     * @return SearchEngine_Interface_FileSystemDataSource
+     * @return FileSystemDataSource
      */
     public function getSearchOption()
     {
@@ -38,7 +42,7 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
     }
 
     /**
-     * @param SearchEngine_Interface_FileSystemDataSource $SearchOption
+     * @param FileSystemDataSource $SearchOption
      * @return $this
      */
     public function setSearchOption($SearchOption)
@@ -74,7 +78,7 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
      * The return value is cast to an integer.
      * @since 5.1.0
      */
-    public function count()
+    public function count(): int
     {
         return $this->count;
     }
@@ -100,6 +104,7 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
 
     /**
      * @return $this
+     * @throws \InvalidArgumentException
      */
     public function search()
     {
@@ -109,30 +114,24 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
         $filePath = $SearchOption->getFilePath();
         $searchString = $SearchOption->getSearchString();
         $isCaseSensitive = $SearchOption->isCaseSensitive();
-        $highlightResult  = $SearchOption->isHighlightResult();
+        $highlightResult = $SearchOption->isHighlightResult();
         $highlightResultColor = $SearchOption->getHighlightResultColor();
-        if ($handle = fopen($filePath, "r"))
-        {
+        if ($handle = fopen($filePath, "r")) {
             $line_number = 0;
-            while(($lineString = fgets($handle, 4096)) !== false)
-            {
+            while (($lineString = fgets($handle, 4096)) !== false) {
                 /** Total number of sub-string occurrence on that line */
                 $lastPositionOfOccurrence = ($isCaseSensitive) ? strpos($lineString, $searchString) : stripos($lineString, $searchString);
 
                 /** Highlight Text/Keyword if found */
-                if ($lastPositionOfOccurrence!==false)
-                {
+                if ($lastPositionOfOccurrence !== false) {
                     $totalResult = ($isCaseSensitive) ? substr_count($lineString, $searchString) : substr_count(strtolower($lineString), strtolower($searchString));
-                    $found = $highlightResult ? self::highlightKeyword($lineString, $searchString, $highlightResultColor) : $lineString;
+                    $found = $highlightResult ? $this->highlightKeyword($lineString, $searchString, $highlightResultColor) : $lineString;
 
-                    if ($SearchOption->isGroupResultByFilePath())
-                    {
-                        $result[$filePath]["found"] .= preg_replace('/\s+/', " ", $found)."/n";
+                    if ($SearchOption->isGroupResultByFilePath()) {
+                        $result[$filePath]["found"] .= trim(preg_replace('/\s+/', ' ', $found)) . "/n";
                         $result[$filePath]["count"] += $totalResult;
                         $result[$filePath]["filePath"] = $filePath;
-                    }
-                    else
-                    {
+                    } else {
                         $result[] = array("found" => $found,
                             "line" => $line_number,
                             "count" => $totalResult,
@@ -144,10 +143,8 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
                 $line_number++;
             }
             fclose($handle);
-        }
-        else
-        {
-            throw new InvalidArgumentException("Invalid File for Search Operation: $filePath");
+        } else {
+            throw new \InvalidArgumentException("Invalid File for Search Operation: $filePath");
         }
 
         return $this->setResult($result)->setCount($count);
@@ -159,7 +156,7 @@ class SearchEngine_Src_FileSystem_SearchFile implements Countable
      * @param string $color
      * @return mixed
      */
-    public function highlightKeyword($haystack, $needle, $color="000000")
+    public function highlightKeyword($haystack, $needle, $color = "000000")
     {
         return preg_replace("/($needle)/i", sprintf("<b><span style='color:%s'>$1</span></b>", $color), $haystack);
     }

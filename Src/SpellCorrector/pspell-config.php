@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * @Author: Ademola Aina
  * User: ademola.aina
  * Date: 7/3/2015
  * Time: 3:51 PM
@@ -40,10 +40,11 @@ function test()
 {
     global $dictionary;
     echo "Check Spelling Installation";
-    if (pspell_check($dictionary, "colour"))
-    { echo "This is a valid spelling"; }
-    else
-    { echo "Sorry, wrong spelling"; }
+    if (pspell_check($dictionary, "colour")) {
+        echo "This is a valid spelling";
+    } else {
+        echo "Sorry, wrong spelling";
+    }
 }
 
 
@@ -73,7 +74,6 @@ function test3()
 //test();
 //test2();
 //test3();
-
 
 
 /*

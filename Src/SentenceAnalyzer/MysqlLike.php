@@ -1,12 +1,8 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: ademola.aina
- * Date: 11/29/2016
- * Time: 8:50 AM
- */
-class SearchEngine_Src_SentenceAnalyzer_MysqlLike extends SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
+namespace SearchEngine\Src\SentenceAnalyzer;
+
+class MysqlLike extends SentenceAnalyzer
 {
     protected $operators;
 
@@ -18,13 +14,13 @@ class SearchEngine_Src_SentenceAnalyzer_MysqlLike extends SearchEngine_Src_Sente
             " OR " => " OR  " . self::e_table_column . " LIKE ",
             " NOT " => " AND " . self::e_table_column . " NOT LIKE ",
             " AND(" => " AND (",
-            "(" => "(". self::e_table_column . " LIKE ",
+            "(" => "(" . self::e_table_column . " LIKE ",
             ")" => " )",
             "<<&ob>>" => " ( ", //another type of ' ( ' That is, a Literal ' ( ' is needed.
             "<<&cb>>" => " ) ", //another type of ' ) ' That is, a Literal ' ) ' is needed.
             "<<--->>" => " OR ", //another type of ' OR ' That is, a Literal ' OR ' is needed.
             "<<+++>>" => " AND ", //another type of ' AND ' That is, a Literal ' AND ' is needed.
-            "<<&&&>>" => " ". self::e_table_column . " NOT LIKE ",  //Another Type of ' NOT ' but without the ' AND ' operator
+            "<<&&&>>" => " " . self::e_table_column . " NOT LIKE ",  //Another Type of ' NOT ' but without the ' AND ' operator
         ));
     }
 
@@ -53,28 +49,28 @@ class SearchEngine_Src_SentenceAnalyzer_MysqlLike extends SearchEngine_Src_Sente
         //Handle Special Circumstances
         $stringTerm = " $stringTerm ";
         $stringTerm = str_replace(array(")", "%' '%"), array(" )", "%' OR '%"), $stringTerm);
-        $stringTerm = preg_replace("/(\w+ )/i", " '%$1%' ", $stringTerm);
+        $stringTerm = preg_replace("/(\w+)/i", " '%$1%' ", $stringTerm);
         $stringTerm = str_replace(array("'% ", " %'"), array("'%", "%'"), $stringTerm);
         $stringTerm = str_replace(array("'%OR%'", "'%AND%'", "'%NOT%'", "'%LIKE%'", "NOT("),
-                                    array("OR", "AND", "NOT", "LIKE", " NOT ("), $stringTerm);
+            array("OR", "AND", "NOT", "LIKE", " NOT ("), $stringTerm);
 
 
-        /** >>>    NOT (ElementMvc_)       >>> Multiply every word by NOT inside the bracket.
+        /** >>>    NOT (.*)       >>> Multiply every word by NOT inside the bracket.
          * and convert them to this class MySql Like operators
          */
-        $stringTerm = preg_replace_callback("/(NOT \(ElementMvc_\))/", function($value){
+        $stringTerm = preg_replace_callback("/(NOT \(.*\))/", function ($value) {
             $value = str_replace("NOT ", " <<+++>> ", $value[0]);
             return str_replace(array("(", "OR", "AND"), array("<<&ob>> <<&&&>> ", "<<--->> <<&&&>> ", "<<+++>> <<&&&>> "), $value);
         }, $stringTerm);
 
         //replace operators where needed
-        $stringTerm = self::e_table_column." LIKE ".str_replace(array_keys($this->operators), $this->operators, $stringTerm);
+        $stringTerm = self::e_table_column . " LIKE " . str_replace(array_keys($this->operators), $this->operators, $stringTerm);
 
         //Clean Up Parenthesis jargon
         $stringTerm = trim(preg_replace('/\s+/', " ", $stringTerm));
         $stringTerm = str_replace(
-            array("AND AND", self::e_table_column." LIKE (".self::e_table_column, self::e_table_column." LIKE AND"),
-            array("AND", "(".self::e_table_column, ""),
+            array("AND AND", self::e_table_column . " LIKE (" . self::e_table_column, self::e_table_column . " LIKE AND"),
+            array("AND", "(" . self::e_table_column, ""),
             $stringTerm
         );
 

@@ -1,18 +1,21 @@
 <?php
 
+namespace SearchEngine\Src\Ranking;
+
+use SearchEngine\Interfaces\CompareString;
+use SearchEngine\Interfaces\Ranking;
+
 /**
  * Class SearchEngine_Src_Ranking_RankingData
  */
-class SearchEngine_Src_Ranking_RankingData implements
-    SearchEngine_Interface_CompareString,
-    SearchEngine_Interface_Ranking
+class RankingData implements CompareString, Ranking
 {
 
     /**
      * @var string
      */
     private $string1,
-            $string2;
+        $string2;
 
     /**
      * @var
@@ -73,7 +76,7 @@ class SearchEngine_Src_Ranking_RankingData implements
     public function setEditDist($editDist = "")
     {
         if (empty($editDist)) {
-            $editDistance = new SearchEngine_Src_Ranking_EditDistance($this->getString1(), $this->getString2());
+            $editDistance = new EditDistance($this->getString1(), $this->getString2());
             $editDist = $editDistance->result();
         }
         $this->editDist = $editDist;
@@ -96,7 +99,10 @@ class SearchEngine_Src_Ranking_RankingData implements
             $long = $string2;
         }
         similar_text($long, $short, $similarTextPercentage);
-        $similarTextPercentage = substr_count($long, $short) * $similarTextPercentage;
+        $substrCount = substr_count($long, $short);
+        if ($substrCount > 0) {
+            $similarTextPercentage = $substrCount * $similarTextPercentage;
+        }
 
         return round($editDist + $similarTextPercentage, 3);
     }

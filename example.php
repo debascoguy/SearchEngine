@@ -1,95 +1,111 @@
 <?php
 /**
- * Created By: Ademola Aina
- * Email: debascoguy@gmail.com
+ * @Author: Ademola Aina
+ * first_name: debascoguy@gmail.com
  * Date: 4/17/2018
  * Time: 11:32 AM
  */
 
-include dirname(__FILE__).DIRECTORY_SEPARATOR."autoloader.php";
+error_reporting(E_ALL ^ E_NOTICE);
 
+include dirname(__FILE__) . DIRECTORY_SEPARATOR . "autoloader.php";
 
 /**
+ * Sample Database From:  
+ *  https://github.com/datacharmer/test_db
+ * 
+ * If using XAMPP and on WINDOWS:
+ * 
+ * 1. Create an empty database: 'employees'
+ * 2. Use the test_db.sql in this repository as I have already helped edit the employees.sql file for ease of import.
+ * 3. Then, Open Command Line (Windows)
+ * 4. cd c:\xampp\mysql\bin
+ * 5. C:\xampp\mysql\bin\> mysql -u {username} -p {databasename} < file_name.sql
+ *
+ */ 
+
+
+/** 
  * CREATE MYSQL CONNECTION
  */
-$connection = SearchEngine_Src_MySql_Connection::getInstance(new SearchEngine_Src_MySql_ConnectionProperty("localhost", "root", "", "test_database"));
-
-
+$connection = SearchEngine\Src\SQL\PDOConnection::getInstance(new SearchEngine\Src\SQL\ConnectionProperty("localhost", "root", "", "employees"));
 
 /**
- * EXAMPLE 1: standard example
+ * EXAMPLE 1: fulltext search example: First, run this SQL on your employees Database:
+ * 
+ * ALTER TABLE employees ADD FULLTEXT(first_name, last_name);
  * =====================================================================================================================
  */
 
 /**     SEARCH STRING : The strings to be search inside the database (Boolean Search).  */
-$searchString = "debascoguy@yahoo.com OR debascoguy@gmail.com NOT ademola";
+$searchString = "Georgi OR Paddy OR King NOT Gregory";
 
-$mysqlLoadDB = new SearchEngine_Src_MySql_MySqlLoadDB(
+$SqlLoadDB = new SearchEngine\Src\SQL\SqlLoadDB(
     $connection,
-    new SearchEngine_Src_MySql_QueryBuilder(),
-    new SearchEngine_Src_SentenceAnalyzer_MysqlFullText(
-        $searchString, array("login_session.email", "login_session.username"),
-        SearchEngine_Src_SentenceAnalyzer_MysqlFullText::IN_BOOLEAN_MODE
+    (new SearchEngine\Src\SQL\QueryBuilder())->setTableName("employees"),
+    new SearchEngine\Src\SentenceAnalyzer\MysqlFullText(
+        $searchString, 
+        ["employees.first_name", "employees.last_name"],
+        SearchEngine\Src\SentenceAnalyzer\MysqlFullText::IN_BOOLEAN_MODE
     )
 );
 
-//Register a Call Back that will be excuted at the time the Query Results are been fetched directly from the Database (Optional).
-$mysqlLoadDB->registerResultCallBack(array($this, 'toString'));
-
 //Now, Search
-$searchEngine = new SearchEngine_SearchEngine();
-$searchEngine->add($mysqlLoadDB)
+$searchEngine = new SearchEngine\SearchEngine();
+$searchEngine->add($SqlLoadDB)
 //    Register a callback on the Search Engine before viewing of final results (Optional)...
-    ->registerResultCallBack(function($searchResult){
-//    Duplicate the search to increase the total number of result... Just an example of how to add an inline callback.
-    while(count($searchResult) < 4095){
-        $result2 = $searchResult;
-        $searchResult = array_merge($searchResult, $result2);
-    }
-    return $searchResult;
-});
+    ->registerResultCallBack(function ($searchResult) {
+        while (count($searchResult) < 4095) {
+            //Simply duplicate the search to increase the total number of result... 
+           //Just an example of how to add an inline callback.
+            $result2 = $searchResult;
+            $searchResult = array_merge($searchResult, $result2);
+        }
+        return $searchResult;
+    });
 
 $result = $searchEngine->search()->getResult();
 
 
-
 /**
- * EXAMPLE 2 : Test of Using Multiple DataSource By creating another MysqlLoadDB()
+ * EXAMPLE 2 : Test of Using Multiple DataSource By creating another SqlLoadDB()
  * =====================================================================================================================
  */
 
 /**     USING QUERY BUILDER TO BUILD YOUR SEARCH QUERY...   */
-$mysqlQueryBuilder = new SearchEngine_Src_MySql_QueryBuilder();
+$mysqlQueryBuilder = new SearchEngine\Src\SQL\QueryBuilder();
 $mysqlQueryBuilder->select(array(
-    /** login.email As loginEmail : Use this if duplicate column exist. */
-    "login.email" => "loginEmail",
-    "login.username" => "loginUsername",
-    "login_session.email",
-    "login_session.username",
-))->from("login")
-    ->leftJoin("login_session", "login.email = login_session.email")
-    ->where("login.email", "IN", "('debascoguy@gmail.com', 'debascoguy@yahoo.com')")
+    /** employees.first_name As employeesfirst_name : Use this if duplicate column exist. */
+    "employees.first_name" => "First Name",
+    "employees.emp_no" => "Employee Number",
+    "employees.birth_date",
+    "employees.hire_date",
+))->from("employees")
+    ->leftJoin("dept_emp", "dept_emp.emp_no = employees.emp_no")
+    ->where("employees.first_name IN ('Georgi', 'Paddy', 'King')")
+    ->andWhere("employees.first_name NOT IN ('Gregory')")
 
-    /** Another Method of Adding Single Column to select() Field-list. While testing the Mysql UNION function */
+    /** Another Method of Adding Single Column to select() Field-list While also testing the Mysql UNION function */
     ->union()
-    ->selectColumn("login.email", "loginEmail")
-    ->selectColumn("login.username", "loginUsername")
-    ->selectColumn("login_session.email")
-    ->selectColumn("login_session.username")
-    ->from("login")
-    ->leftJoin("login_session", "login.email = login_session.email")
-    ->where("login.email", "IN", "('debascoguy@gmail.com', 'debascoguy@yahoo.com')");
+    ->selectColumn("employees.first_name", "First Name")
+    ->selectColumn("employees.emp_no", "Employee Number")
+    ->selectColumn("employees.birth_date")
+    ->selectColumn("employees.hire_date")
+    ->from("employees")
+    ->leftJoin("dept_emp", "dept_emp.emp_no = employees.emp_no")
+    ->where("employees.first_name IN ('Georgi', 'Paddy', 'King')")
+    ->andWhere("employees.first_name NOT IN ('Gregory')");
 
 
-$mysqlLoadDB2 = new SearchEngine_Src_MySql_MySqlLoadDB(
+$SqlLoadDB2 = new SearchEngine\Src\SQL\SqlLoadDB(
     $connection,
     $mysqlQueryBuilder,
-    new SearchEngine_Src_SentenceAnalyzer_MysqlLike($searchString)
+    new SearchEngine\Src\SentenceAnalyzer\MysqlLike($searchString)
 );
 //Now, Search
 $searchEngine = $searchEngine->reset();
-$searchEngine->add($mysqlLoadDB2)->registerResultCallBack(function($searchResult){
-    while(count($searchResult) < 4095){
+$searchEngine->add($SqlLoadDB2)->registerResultCallBack(function ($searchResult) {
+    while (count($searchResult) < 4095) {
         $result2 = $searchResult;
         $searchResult = array_merge($searchResult, $result2);
     }
@@ -98,17 +114,16 @@ $searchEngine->add($mysqlLoadDB2)->registerResultCallBack(function($searchResult
 $result2 = $searchEngine->search()->getResult();
 
 
-
 /**
  * EXAMPLE 3: File System Searching...
  */
-/** @var SearchEngine_Src_FileSystem_SearchOption $fileSystemDataSource */
-$fileSystemDataSource = new SearchEngine_Src_FileSystem_SearchOption(
-    dirname(dirname(__FILE__))."\\Template",    /** >> This can be either file or directory ==>> */
-    "toefl"
+/** @var SearchEngine\Src\FileSystem\SearchOption $fileSystemDataSource */
+$fileSystemDataSource = new SearchEngine\Src\FileSystem\SearchOption(
+    dirname(__FILE__). DIRECTORY_SEPARATOR . "dictionary",  /** >> This can be either file or directory ==>> */
+    "BASIC"
 );
 $fileSystemDataSource->setGroupResultByFilePath(true);
-$fileSystemLoadDB = new SearchEngine_Src_FileSystem_CtrlF($fileSystemDataSource);
+$fileSystemLoadDB = new SearchEngine\Src\FileSystem\CtrlF($fileSystemDataSource);
 //Now, Search
 $searchEngine = $searchEngine->reset();
 $result3 = $searchEngine->add($fileSystemLoadDB)->search()->getResult();

@@ -1,9 +1,11 @@
 <?php
 
+namespace SearchEngine\Services;
+
 /**
- * Class SearchEngine_Services_CallBackHandler
+ * Class CallBackHandler
  */
-class SearchEngine_Services_CallBackHandler
+class CallBackHandler
 {
     /**
      * @var string|array|callable
@@ -17,7 +19,7 @@ class SearchEngine_Services_CallBackHandler
 
     /**
      * @param  string|array|object|callable $callback PHP callback
-     * @param  array                        $metadata  Callback metadata
+     * @param  array $metadata Callback metadata
      * @param $isCallableVerified
      */
     public function __construct($callback, array $metadata = array(), $isCallableVerified = false)
@@ -29,22 +31,19 @@ class SearchEngine_Services_CallBackHandler
     /**
      * @param $callback
      * @param $isCallableVerified
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     protected function registerCallback($callback, $isCallableVerified)
     {
-        if ($isCallableVerified){
+        if ($isCallableVerified) {
             $this->callback = $callback;
-        }
-        elseif (is_callable($callback)) {
+        } elseif (is_callable($callback)) {
             $this->callback = $callback;
-        }
-        /** TODO This can be removed if PHP_VERSION >= 5.3. */
-        elseif (is_callable(array($callback, '__invoke'))){
+        } /** TODO This can be removed if PHP_VERSION >= 5.3. */
+        elseif (is_callable(array($callback, '__invoke'))) {
             $this->callback = $callback;
-        }
-        else{
-            throw new InvalidArgumentException('Invalid callback provided; not callable');
+        } else {
+            throw new \InvalidArgumentException('Invalid callback provided; not callable');
         }
     }
 

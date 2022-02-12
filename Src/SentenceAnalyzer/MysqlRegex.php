@@ -1,12 +1,8 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: ademola.aina
- * Date: 11/22/2016
- * Time: 8:21 AM
- */
-class SearchEngine_Src_SentenceAnalyzer_MysqlRegex extends SearchEngine_Src_SentenceAnalyzer_SentenceAnalyzer
+namespace SearchEngine\Src\SentenceAnalyzer;
+
+class MysqlRegex extends SentenceAnalyzer
 {
     public function __construct($terms = "")
     {

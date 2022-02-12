@@ -1,12 +1,17 @@
 <?php
 
+namespace SearchEngine\Src\FileSystem;
+
+use SearchEngine\Interfaces\FileSystemDataSource;
+use SearchEngine\Interfaces\Search;
+
 /**'
- * Class SearchEngine_Src_FileSystem_SearchDirectory
+ * Class SearchDirectory
  */
-class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interface_Search, Countable
+class SearchDirectory implements Search, \Countable
 {
     /**
-     * @var SearchEngine_Interface_FileSystemDataSource
+     * @var FileSystemDataSource
      */
     protected $SearchOption;
 
@@ -21,9 +26,9 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
     protected $count = 0;
 
     /**
-     * @param SearchEngine_Interface_FileSystemDataSource $SearchOption
+     * @param FileSystemDataSource $SearchOption
      */
-    public function __construct(SearchEngine_Interface_FileSystemDataSource $SearchOption)
+    public function __construct(FileSystemDataSource $SearchOption)
     {
         $this->SearchOption = $SearchOption;
     }
@@ -35,30 +40,27 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
     {
         $searchOption = $this->getSearchOption();
         /**
-         * @var RecursiveDirectoryIterator $recursiveDirectoryIterator
+         * @var \RecursiveDirectoryIterator $recursiveDirectoryIterator
          * Create a recursive iterator that knows how to follow subdirectories.
          */
-        $recursiveDirectoryIterator = new RecursiveDirectoryIterator($searchOption->getFilePath(), FilesystemIterator::SKIP_DOTS);
+        $recursiveDirectoryIterator = new \RecursiveDirectoryIterator($searchOption->getFilePath(), \FilesystemIterator::SKIP_DOTS);
         /**
-         * @var RecursiveIteratorIterator $recursiveIteratorIterator
+         * @var \RecursiveIteratorIterator $recursiveIteratorIterator
          * Pass our RecursiveDirectoryIterator to the constructor of RecursiveIteratorIterator
          * to enable sub-directories iteration.
          * Also, pass in a 'mode', to specify whether parents should come before children, after children, or not at all.
          * We want parent first, so we just use SELF_FIRST
          */
-        $recursiveIteratorIterator = new RecursiveIteratorIterator($recursiveDirectoryIterator, RecursiveIteratorIterator::SELF_FIRST);
+        $recursiveIteratorIterator = new \RecursiveIteratorIterator($recursiveDirectoryIterator, \RecursiveIteratorIterator::SELF_FIRST);
 
         /** Use our RecursiveIteratorIterator as if it was a flat array */
-        foreach($recursiveIteratorIterator as $filePath => $info)
-        {
-            if (is_file($filePath))
-            {
+        foreach ($recursiveIteratorIterator as $filePath => $info) {
+            if (is_file($filePath)) {
                 $searchOption->setFilePath($filePath);
-                $searchFile = new SearchEngine_Src_FileSystem_SearchFile($searchOption);
+                $searchFile = new SearchFile($searchOption);
                 $searchFile->search();
-                if ($searchFile->count()!=0)
-                {
-                    $this->result = array_merge($this->result,$searchFile->getResult());
+                if ($searchFile->count() != 0) {
+                    $this->result = array_merge($this->result, $searchFile->getResult());
                     $this->count += $searchFile->count();
                 }
             }
@@ -72,36 +74,34 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
     public function self_recursive_search()
     {
         $searchOption = $this->getSearchOption();
-        $files_dir = glob($searchOption->getFilePath()."/*");
-        foreach($files_dir as $file)
-        {
+        $files_dir = glob($searchOption->getFilePath() . "/*");
+        foreach ($files_dir as $file) {
             if (is_file($file)) {
                 $searchOption2 = $this->getSearchOption();
                 $searchOption2->setFilePath($file);
-                $searchFile = new SearchEngine_Src_FileSystem_SearchFile($searchOption2);
+                $searchFile = new SearchFile($searchOption2);
                 $searchFile->search();
-                if ($searchFile->count()!=0) {
-                    $this->result = array_merge($this->result,$searchFile->getResult());
+                if ($searchFile->count() != 0) {
+                    $this->result = array_merge($this->result, $searchFile->getResult());
                     $this->count += $searchFile->count();
                 }
-            }
-            else if (is_dir($file)) {    /** Recursive into any sub-directory (if any). */
+            } else if (is_dir($file)) {
+                /** Recursive into any sub-directory (if any). */
                 $searchOption2 = $this->getSearchOption();
                 $searchOption2->setFilePath($file);
                 $searchDirectory = new self($searchOption2);
                 $searchDirectory->search();
                 $this->result = array_merge($this->result, $searchDirectory->getResult());
                 $this->count += $searchDirectory->count();
-            }
-            else {
-                throw new InvalidArgumentException("Invalid Directory for Search Operation: $file");
+            } else {
+                throw new \InvalidArgumentException("Invalid Directory for Search Operation: $file");
             }
         }
         return $this;
     }
 
     /**
-     * @return SearchEngine_Interface_FileSystemDataSource
+     * @return FileSystemDataSource
      */
     public function getSearchOption()
     {
@@ -109,8 +109,8 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
     }
 
     /**
-     * @param SearchEngine_Interface_FileSystemDataSource $SearchOption
-     * @return SearchEngine_Src_FileSystem_SearchDirectory
+     * @param FileSystemDataSource $SearchOption
+     * @return SearchDirectory
      */
     public function setSearchOption($SearchOption)
     {
@@ -127,8 +127,8 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
     }
 
     /**
-     * @param array|ArrayIterator $result
-     * @return SearchEngine_Src_FileSystem_SearchDirectory
+     * @param array|\ArrayIterator $result
+     * @return SearchDirectory
      */
     public function setResult($result)
     {
@@ -145,7 +145,7 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
      * The return value is cast to an integer.
      * @since 5.1.0
      */
-    public function count()
+    public function count(): int
     {
         return $this->count;
     }
@@ -160,7 +160,7 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
 
     /**
      * @param int $count
-     * @return SearchEngine_Src_FileSystem_SearchDirectory
+     * @return SearchDirectory
      */
     public function setCount($count)
     {
@@ -173,7 +173,7 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
      */
     public function sortAsc()
     {
-        uasort($this->result, function($a, $b){
+        uasort($this->result, function ($a, $b) {
             if ($a["count"] == $b["count"]) {
                 return 0;
             }
@@ -186,7 +186,7 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
      */
     public function sortDesc()
     {
-        uasort($this->result, function($a, $b){
+        uasort($this->result, function ($a, $b) {
             if ($a["count"] == $b["count"]) {
                 return 0;
             }
@@ -195,11 +195,11 @@ class SearchEngine_Src_FileSystem_SearchDirectory implements SearchEngine_Interf
     }
 
     /**
-     * @return ArrayIterator
+     * @return \ArrayIterator
      */
-    public function getIterator()
+    public function getIterator(): \ArrayIterator
     {
-        return new ArrayIterator((array)$this->result);
+        return new \ArrayIterator((array)$this->result);
     }
 
 }

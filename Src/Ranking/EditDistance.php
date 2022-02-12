@@ -1,14 +1,17 @@
 <?php
 
+namespace SearchEngine\Src\Ranking;
+
+use SearchEngine\Interfaces\CompareString;
+use SearchEngine\Interfaces\EditDistance as InterfacesEditDistance;
+
 /**
  * Class SearchEngine_Src_Ranking_EditDistance
  *
  * Calculate the modified Levenshtein Distance of the two strings
  * Using this algorithm eliminates the MySQL LIKE statement in your query.
  */
-class SearchEngine_Src_Ranking_EditDistance implements
-    SearchEngine_Interface_CompareString,
-    SearchEngine_Interface_EditDistance
+class EditDistance implements CompareString, InterfacesEditDistance
 {
     private $string1, $string2, $string1Length, $string2Length, $LevenshteinDistanceArray = array();
 
@@ -157,7 +160,7 @@ class SearchEngine_Src_Ranking_EditDistance implements
                 $long = $str2;
             }
 
-            if (stripos($long, $short)!==false) {
+            if (stripos($long, $short) !== false) {
                 $factor = $LavenshteinDistance / substr_count($long, $short);
                 $LavenshteinDistance -= $factor;
             }
