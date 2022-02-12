@@ -17,5 +17,5 @@
             "SearchEngine": "Src/"
         }
     },
-    "license": "GNU-GPU-v2"
+    "license": "GPL-2.0-only"
 }
