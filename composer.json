@@ -1,0 +1,21 @@
+{
+    "name": "emma/searchengine",
+    "description": "Php - MySql/SQL Search Engine. Considering the challenges in using MySQL/MSSQL/SQL as a back-end for industrial level application search-engine. An optimized techniques and algorithms are developed to boost performance and make SQL databases works like magic for the purpose of searching.",
+    "authors": [
+        {
+            "name": "Ademola Aina",
+            "email" : "debascoguy@gmail.com",
+            "homepage": "https://github.com/debascoguy/SearchEngine",
+            "role": "Founder/Lead Software Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "mysql": ">=5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "SearchEngine": ""
+        }
+    }
+}
