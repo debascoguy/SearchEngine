@@ -1,9 +1,9 @@
 <?php
 
-namespace SearchEngine\Src\SQL;
+namespace SearchEngine\SQL;
 
 use SearchEngine\Interfaces\SqlSearchQuery;
-use SearchEngine\Src\SentenceAnalyzer\MysqlFullText;
+use SearchEngine\SentenceAnalyzer\MysqlFullText;
 
 /**
  * @Author: Ademola Aina

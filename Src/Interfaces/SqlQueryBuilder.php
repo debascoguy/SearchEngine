@@ -1,7 +1,7 @@
 <?php
 
 namespace SearchEngine\Interfaces;
-use SearchEngine\Src\SQL\PDOConnection;
+use SearchEngine\SQL\PDOConnection;
 
 interface SqlQueryBuilder
 {

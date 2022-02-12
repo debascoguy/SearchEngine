@@ -1,7 +1,7 @@
 <?php
 
 namespace SearchEngine\Interfaces;
-use SearchEngine\Src\SQL\QueryBuilder;
+use SearchEngine\SQL\QueryBuilder;
 
 interface SqlSearchQuery
 {

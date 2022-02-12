@@ -28,7 +28,7 @@ include dirname(__FILE__) . DIRECTORY_SEPARATOR . "autoloader.php";
 /** 
  * CREATE MYSQL CONNECTION
  */
-$connection = SearchEngine\Src\SQL\PDOConnection::getInstance(new SearchEngine\Src\SQL\ConnectionProperty("localhost", "root", "", "employees"));
+$connection = SearchEngine\SQL\PDOConnection::getInstance(new SearchEngine\SQL\ConnectionProperty("localhost", "root", "", "employees"));
 
 /**
  * EXAMPLE 1: fulltext search example: First, run this SQL on your employees Database:
@@ -40,13 +40,13 @@ $connection = SearchEngine\Src\SQL\PDOConnection::getInstance(new SearchEngine\S
 /**     SEARCH STRING : The strings to be search inside the database (Boolean Search).  */
 $searchString = "Georgi OR Paddy OR King NOT Gregory";
 
-$SqlLoadDB = new SearchEngine\Src\SQL\SqlLoadDB(
+$SqlLoadDB = new SearchEngine\SQL\SqlLoadDB(
     $connection,
-    (new SearchEngine\Src\SQL\QueryBuilder())->setTableName("employees"),
-    new SearchEngine\Src\SentenceAnalyzer\MysqlFullText(
+    (new SearchEngine\SQL\QueryBuilder())->setTableName("employees"),
+    new SearchEngine\SentenceAnalyzer\MysqlFullText(
         $searchString, 
         ["employees.first_name", "employees.last_name"],
-        SearchEngine\Src\SentenceAnalyzer\MysqlFullText::IN_BOOLEAN_MODE
+        SearchEngine\SentenceAnalyzer\MysqlFullText::IN_BOOLEAN_MODE
     )
 );
 
@@ -73,7 +73,7 @@ $result = $searchEngine->search()->getResult();
  */
 
 /**     USING QUERY BUILDER TO BUILD YOUR SEARCH QUERY...   */
-$mysqlQueryBuilder = new SearchEngine\Src\SQL\QueryBuilder();
+$mysqlQueryBuilder = new SearchEngine\SQL\QueryBuilder();
 $mysqlQueryBuilder->select(array(
     /** employees.first_name As employeesfirst_name : Use this if duplicate column exist. */
     "employees.first_name" => "First Name",
@@ -97,10 +97,10 @@ $mysqlQueryBuilder->select(array(
     ->andWhere("employees.first_name NOT IN ('Gregory')");
 
 
-$SqlLoadDB2 = new SearchEngine\Src\SQL\SqlLoadDB(
+$SqlLoadDB2 = new SearchEngine\SQL\SqlLoadDB(
     $connection,
     $mysqlQueryBuilder,
-    new SearchEngine\Src\SentenceAnalyzer\MysqlLike($searchString)
+    new SearchEngine\SentenceAnalyzer\MysqlLike($searchString)
 );
 //Now, Search
 $searchEngine = $searchEngine->reset();
@@ -117,13 +117,13 @@ $result2 = $searchEngine->search()->getResult();
 /**
  * EXAMPLE 3: File System Searching...
  */
-/** @var SearchEngine\Src\FileSystem\SearchOption $fileSystemDataSource */
-$fileSystemDataSource = new SearchEngine\Src\FileSystem\SearchOption(
+/** @var SearchEngine\FileSystem\SearchOption $fileSystemDataSource */
+$fileSystemDataSource = new SearchEngine\FileSystem\SearchOption(
     dirname(__FILE__). DIRECTORY_SEPARATOR . "dictionary",  /** >> This can be either file or directory ==>> */
     "BASIC"
 );
 $fileSystemDataSource->setGroupResultByFilePath(true);
-$fileSystemLoadDB = new SearchEngine\Src\FileSystem\CtrlF($fileSystemDataSource);
+$fileSystemLoadDB = new SearchEngine\FileSystem\CtrlF($fileSystemDataSource);
 //Now, Search
 $searchEngine = $searchEngine->reset();
 $result3 = $searchEngine->add($fileSystemLoadDB)->search()->getResult();

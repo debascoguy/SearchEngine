@@ -1,6 +1,6 @@
 <?php
 
-namespace SearchEngine\Src\FileSystem;
+namespace SearchEngine\FileSystem;
 
 use SearchEngine\Interfaces\FileSystemDataSource;
 use SearchEngine\Interfaces\Search;

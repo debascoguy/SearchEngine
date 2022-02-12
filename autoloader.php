@@ -3,7 +3,7 @@
 function searchEngineAutoloader($class)
 {
     $trimmedClass = substr($class, strlen("SearchEngine"));
-    $fullPath = dirname(__FILE__) . DIRECTORY_SEPARATOR . str_replace(["\\", "/"], DIRECTORY_SEPARATOR, $trimmedClass) . '.php';
+    $fullPath = dirname(__FILE__) . DIRECTORY_SEPARATOR ."Src". str_replace(["\\", "/"], DIRECTORY_SEPARATOR, $trimmedClass) . '.php';
     if (file_exists($fullPath)) {
         include $fullPath;
         return true;

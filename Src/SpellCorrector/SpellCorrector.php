@@ -1,6 +1,6 @@
 <?php
 
-namespace SearchEngine\Src\SpellCorrector;
+namespace SearchEngine\SpellCorrector;
 
 /**
  * This class implements the Spell correcting feature, useful for the

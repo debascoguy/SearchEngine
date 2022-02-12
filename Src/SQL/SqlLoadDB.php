@@ -1,11 +1,11 @@
 <?php
 
-namespace SearchEngine\Src\SQL;
+namespace SearchEngine\SQL;
 
 use SearchEngine\Interfaces\Search;
 use SearchEngine\Interfaces\SqlLoadDB as InterfacesSqlLoadDB;
 use SearchEngine\Services\CallBackHandler;
-use SearchEngine\Src\SentenceAnalyzer\SentenceAnalyzer;
+use SearchEngine\SentenceAnalyzer\SentenceAnalyzer;
 
 /**
  * @Author: Ademola Aina

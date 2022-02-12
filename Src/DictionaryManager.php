@@ -1,6 +1,8 @@
 <?php
-namespace SearchEngine\Src;
-use SearchEngine\Src\SpellCorrector\SpellCorrector;
+
+namespace SearchEngine;
+
+use SearchEngine\SpellCorrector\SpellCorrector;
 
 /**
  * Class SearchEngine_Src_DictionaryManager

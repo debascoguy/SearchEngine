@@ -1,6 +1,6 @@
 <?php
 
-namespace SearchEngine\Src\Ranking;
+namespace SearchEngine\Ranking;
 
 use SearchEngine\Interfaces\CompareString;
 use SearchEngine\Interfaces\Ranking;

@@ -14,7 +14,8 @@
     },
     "autoload": {
         "psr-4": {
-            "SearchEngine": ""
+            "SearchEngine": "Src/"
         }
-    }
+    },
+    "license": "GNU-GPU-v2"
 }

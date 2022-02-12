@@ -1,6 +1,6 @@
 <?php
 
-namespace SearchEngine\Src\SQL;
+namespace SearchEngine\SQL;
 
 class PDOConnection {
 

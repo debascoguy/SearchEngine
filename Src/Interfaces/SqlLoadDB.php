@@ -1,8 +1,8 @@
 <?php
 
 namespace SearchEngine\Interfaces;
-use SearchEngine\Src\SQL\PDOConnection;
-use SearchEngine\Src\SQL\QueryBuilder;
+use SearchEngine\SQL\PDOConnection;
+use SearchEngine\SQL\QueryBuilder;
 
 interface SqlLoadDB
 {

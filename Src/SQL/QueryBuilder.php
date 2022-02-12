@@ -1,10 +1,10 @@
 <?php
 
-namespace SearchEngine\Src\SQL;
+namespace SearchEngine\SQL;
 use Emma\ServiceManager\Singleton;
 use SearchEngine\Interfaces\SqlQueryBuilder;
-use SearchEngine\Src\SentenceAnalyzer\MysqlFullText;
-use SearchEngine\Src\SentenceAnalyzer\SentenceAnalyzer;
+use SearchEngine\SentenceAnalyzer\MysqlFullText;
+use SearchEngine\SentenceAnalyzer\SentenceAnalyzer;
 
 /**
  * Class QueryBuilder

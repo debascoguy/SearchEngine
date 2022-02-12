@@ -1,6 +1,6 @@
 <?php
 
-namespace SearchEngine\Src\SentenceAnalyzer;
+namespace SearchEngine\SentenceAnalyzer;
 
 class MysqlFullText extends SentenceAnalyzer
 {

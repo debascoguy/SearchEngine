@@ -4,10 +4,10 @@ namespace SearchEngine;
 
 use SearchEngine\Interfaces\Search;
 use SearchEngine\Services\CallBackHandler;
-use SearchEngine\Src\DictionaryManager;
-use SearchEngine\Src\FileSystem\CtrlF;
-use SearchEngine\Src\Ranking\EditDistance;
-use SearchEngine\Src\Ranking\RankingData;
+use SearchEngine\DictionaryManager;
+use SearchEngine\FileSystem\CtrlF;
+use SearchEngine\Ranking\EditDistance;
+use SearchEngine\Ranking\RankingData;
 
 /**
  * @Author: Ademola Aina
