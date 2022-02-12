@@ -263,8 +263,9 @@ class SearchQuery implements SqlSearchQuery
     public function getTableColumns()
     {
         $QueryBuilder = $this->getQueryBuilder();
+        $db = $QueryBuilder->getConnection()->getConnectionProperty()->getDatabase();
 
-        $query = " select * from information_schema.columns where table_schema = DATABASE() ";
+        $query = " select * from information_schema.columns where table_schema = '$db' ";
         $query .= " AND `table_name` = '" . $QueryBuilder->getTableName() . "' ";
         $query .= " order by table_name ";
         $result = $QueryBuilder->getConnection()->executeQuery($query);

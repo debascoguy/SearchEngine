@@ -25,7 +25,7 @@ class SearchEngine implements Search
     /**
      * @var array
      */
-    protected $result = array();
+    protected $result = [];
 
     /**
      * @var CallBackHandler[]|array
@@ -54,7 +54,7 @@ class SearchEngine implements Search
      */
     public function search()
     {
-        $searchResult = array();
+        $searchResult = [];
         $LoadDBs = $this->getLoadDB();
         $count = count($LoadDBs);
         switch ($count) {
@@ -191,7 +191,7 @@ class SearchEngine implements Search
      * @param array $arguments
      * @return $this
      */
-    public function registerResultCallBack($callable, $arguments = array())
+    public function registerResultCallBack($callable, $arguments = [])
     {
         $this->resultCallBacks[] = new CallBackHandler($callable, $arguments);
         return $this;
@@ -210,7 +210,7 @@ class SearchEngine implements Search
      */
     public function resetCallBacks()
     {
-        $this->resultCallBacks = array();
+        $this->resultCallBacks = [];
         return $this;
     }
 
@@ -278,7 +278,8 @@ class SearchEngine implements Search
      */
     public function reset($resetCallBack = true)
     {
-        $this->loadDB = array();
+        $this->loadDB = [];
+        $this->result = [];
         if ($resetCallBack) $this->resetCallBacks();
         return $this;
     }
