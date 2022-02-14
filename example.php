@@ -134,7 +134,7 @@ $searchEngine = $searchEngine->reset();
 $result3 = $searchEngine->add($fileSystemLoadDB)->search()->getResult();
 
 
-$pgProp = new SearchEngine\SQL\ConnectionProperty("localhost", "postgres", "@aAbB2021", "moneypally", "5432");
+$pgProp = new SearchEngine\SQL\ConnectionProperty("localhost", "postgres", "testing", "test_db", "5432");
 $pgProp->setDbms(DBMS::PostGreSQL)->setSchema("public");
 $pgconnection = $connection->connect($pgProp);
 
