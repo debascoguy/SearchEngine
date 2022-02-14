@@ -3,7 +3,10 @@
 namespace SearchEngine\SQL;
 
 use SearchEngine\Interfaces\SqlSearchQuery;
+use SearchEngine\SentenceAnalyzer\PostgreSqlFullText;
 use SearchEngine\SentenceAnalyzer\MysqlFullText;
+use SearchEngine\SentenceAnalyzer\PostgreSqlLike;
+use SearchEngine\SentenceAnalyzer\SqlFullText;
 
 /**
  * @Author: Ademola Aina
@@ -54,15 +57,43 @@ class SearchQuery implements SqlSearchQuery
 
         /** @var MysqlFullText $sentenceAnalyzer */
         $sentenceAnalyzer = $QueryBuilder->getSentenceAnalyzer();
-        $searchStringExpression = (string)$sentenceAnalyzer;
+        $searchStringExpression = addslashes((string)$sentenceAnalyzer);
         $fullTextIndexedColumns = $sentenceAnalyzer->getFullTextIndexedColumns();
+
+        if ($sentenceAnalyzer instanceof MysqlFullText) {
+            $searchMode = $sentenceAnalyzer->getSearchMode();
+            $whereClause = "MATCH (" . implode(", ", $fullTextIndexedColumns) . ") AGAINST ('$searchStringExpression' $searchMode) ";
+            $relevanceColumn = ($whereClause . " AS relevance "); 
+        }
+        else if ($sentenceAnalyzer instanceof PostgreSqlFullText) {
+            if ($sentenceAnalyzer->getSearchMode() == PostgreSqlFullText::SEARCH_NOT_INDEXED) {
+                $indexedColumn = "to_tsvector('english', " . implode(" || ' ' || ", $fullTextIndexedColumns).")" ;                           
+                $whereClause = "$indexedColumn @@ plainto_tsquery('english', '$searchStringExpression')";
+                $relevanceColumn = "ts_rank($indexedColumn, plainto_tsquery('english', '$searchStringExpression') ) AS relevance";
+            }
+            else{
+                $size = count($fullTextIndexedColumns);
+
+                $indexedColumns = array_map(function($ft) use ($searchStringExpression) {
+                    return "ts_rank($ft, plainto_tsquery('english', '$searchStringExpression'))";
+                }, $fullTextIndexedColumns);
+
+                $relevanceColumn = $size > 1 ? "(".implode(" + ", $indexedColumns) . ")/$size AS relevance" : "(".$indexedColumns[0] . ") AS relevance";
+
+                $where = array_map(function($ft) use ($searchStringExpression) {
+                    return "$ft @@ plainto_tsquery('english', '$searchStringExpression')";
+                }, $fullTextIndexedColumns);
+
+                $whereClause = implode(" OR ", $where);
+            }
+        }
+        else{
+            $whereClause = "1=1";
+            $relevanceColumn = "0 AS relevance ";
+        }
 
         $subQuery = $this->generateSearchSubQuery(true, $fullTextIndexedColumns);
 
-        $searchMode = $sentenceAnalyzer->getSearchMode();
-        $whereClause = "MATCH (" . implode(", ", $fullTextIndexedColumns) . ") AGAINST ('$searchStringExpression' $searchMode) ";
-        $relevanceColumn = ($whereClause . " AS relevance ");
-        
         if (count($QueryBuilder->getTableList()) == 1) {
             $temp = explode(" FROM ", $subQuery);
             $Query = $temp[0] . ", " . $relevanceColumn . " FROM " . $temp[1];
@@ -120,6 +151,7 @@ class SearchQuery implements SqlSearchQuery
         $tableColumnsNeeded = $QueryBuilder->getColumns();
         $realFieldNames = $QueryBuilder->getFieldList();
         $excludeColumnsFromSearch = $QueryBuilder->getExcludeColumnsFromSearch();
+        $tableList = $QueryBuilder->getTableList();
         $columnIn = $columnNotIn = "";
 
         if ($isFulltextSearch) {
@@ -134,26 +166,23 @@ class SearchQuery implements SqlSearchQuery
             }
         } else {
             $QueryBuilder->setMasterColumn("all_columns");
+            $allTableColumns = $this->getTableColumns($tableList);
             if (!empty($tableColumnsNeeded)) {
-                $query = " SELECT CONCAT( 'SELECT " . addslashes(implode(", ", $tableColumnsNeeded )) . ",
-                                    CONCAT_WS(\' \', ',
-                                    GROUP_CONCAT(CONCAT(TABLE_NAME, '.', COLUMN_NAME)), ') AS {$QueryBuilder->getMasterColumn()}
-                                    FROM " . $QueryBuilder->getTableName();
+                $query = " SELECT CONCAT( 'SELECT " 
+                                . addslashes(implode(", ", $tableColumnsNeeded ))  . ", " 
+                                . "CONCAT(".addslashes(implode(", ", $allTableColumns )) . ") AS {$QueryBuilder->getMasterColumn()} 
+                                FROM " . $QueryBuilder->getTableName();
 
-                $columnIn = " AND column_name IN ('" . implode("', '", $QueryBuilder->getFieldNamesWithoutTableName($realFieldNames)) . "') ";
+                $columnIn = " AND CONCAT(TABLE_NAME, '.', COLUMN_NAME) IN ('" . implode("', '", $realFieldNames) . "') ";
             } else {
-                $query = " SELECT CONCAT( 'SELECT *, " . "
-                                    CONCAT_WS(\' \', ',
-                                    GROUP_CONCAT(CONCAT(TABLE_NAME, '.', COLUMN_NAME)), ') AS {$QueryBuilder->getMasterColumn()}
-                                    FROM " . $QueryBuilder->getTableName();
-
+                $query = " SELECT CONCAT( 'SELECT *, "  . addslashes(implode(", ", $allTableColumns )) . " AS {$QueryBuilder->getMasterColumn()}  FROM " . $QueryBuilder->getTableName();
                 $columnIn = "";
             }
         }
 
 
         if (is_array($excludeColumnsFromSearch) && count($excludeColumnsFromSearch) > 0) {
-            $columnNotIn = " AND column_name NOT IN ('" . implode("', '", $QueryBuilder->getFieldNamesWithoutTableName($excludeColumnsFromSearch)) . "') ";
+            $columnNotIn = " AND CONCAT(TABLE_NAME, '.', COLUMN_NAME) NOT IN ('" . implode("', '", $excludeColumnsFromSearch) . "') ";
         }
 
         $joins = $QueryBuilder->getJoins();
@@ -176,12 +205,11 @@ class SearchQuery implements SqlSearchQuery
             $query .= " " . $orderBy;
         }
 
-        $db = $QueryBuilder->getConnection()->getConnectionProperty()->getDatabase();
-        $query .= "' ) AS query FROM `information_schema`.`columns`
-                    WHERE  `table_schema`= '$db' ";
-        $tableList = $QueryBuilder->getTableList();
+        $schema = $QueryBuilder->getConnection()->getConnectionProperty()->getSchema();
+        $query .= "' ) AS query FROM information_schema.columns
+                    WHERE  table_schema = '$schema' ";
         if (!empty($tableList) > 0) {
-            $query .= " AND `table_name` IN ('" . implode("', '", $tableList) . "') ";
+            $query .= " AND table_name IN ('" . implode("', '", $tableList) . "') ";
         }
 
         $query .= $columnIn;
@@ -190,6 +218,7 @@ class SearchQuery implements SqlSearchQuery
         $result = $QueryBuilder->getConnection()->executeQuery($query);
         $data = $result->fetch();
         $generatedQuery = $data["query"];
+        $generatedQuery = str_replace('"', "'", $generatedQuery);
 
         $union = $QueryBuilder->getUnion();
         if (!empty($union)) {
@@ -210,7 +239,7 @@ class SearchQuery implements SqlSearchQuery
     /**
      * @return string
      */
-    public function generateMysqlLikeOrRegexSearchQuery()
+    public function generateSqlLikeOrRegexSearchQuery()
     {
         $QueryBuilder = $this->getQueryBuilder();
         $sentenceAnalyzer = $QueryBuilder->getSentenceAnalyzer();
@@ -258,15 +287,27 @@ class SearchQuery implements SqlSearchQuery
     }
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        if ($this->QueryBuilder->getSentenceAnalyzer() instanceof SqlFullText) {
+            return $this->generateFullTextSearchQuery();
+        } else {
+            return $this->generateSqlLikeOrRegexSearchQuery();
+        }
+    }
+
+    /**
      * @return array
      */
-    public function getTableColumns()
+    public function getTableColumns($tableList = [])
     {
         $QueryBuilder = $this->getQueryBuilder();
-        $db = $QueryBuilder->getConnection()->getConnectionProperty()->getDatabase();
+        $schema = $QueryBuilder->getConnection()->getConnectionProperty()->getSchema();
 
-        $query = " select * from information_schema.columns where table_schema = '$db' ";
-        $query .= " AND `table_name` = '" . $QueryBuilder->getTableName() . "' ";
+        $query = " select * from information_schema.columns where table_schema = '$schema' ";
+        $query .= " AND table_name IN  ('" . implode("', '", $tableList) . "') ";
         $query .= " order by table_name ";
         $result = $QueryBuilder->getConnection()->executeQuery($query);
         $columnNames = array();

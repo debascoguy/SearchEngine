@@ -23,7 +23,7 @@ class SentenceAnalyzer
     const e_table_column = "[::table_column::]";
 
     const mysqlFullTextSearch = 1;
-    const mysqlLikeSearch = 2;
+    const SqlLikeSearch = 2;
     const mysqlRegexSearch = 3;
 
     /**
@@ -72,15 +72,15 @@ class SentenceAnalyzer
     /**
      * @param $terms
      * @param int $analyzer
-     * @return MysqlFullText|MysqlLike|MysqlRegex
+     * @return MysqlFullText|SqlLike|MysqlRegex
      */
     public static function getAnalyzer($terms, $analyzer = null)
     {
         switch ($analyzer) {
             case self::mysqlRegexSearch     :
                 return new MysqlRegex($terms);
-            case self::mysqlLikeSearch      :
-                return new MysqlLike($terms);
+            case self::SqlLikeSearch      :
+                return new SqlLike($terms);
             case self::mysqlFullTextSearch  :
                 return new MysqlFullText($terms);
             default                         :
@@ -126,7 +126,7 @@ class SentenceAnalyzer
                 $string = str_replace($checkEmail, '"' . $checkEmail . '"', $string);
             }
             if (is_numeric($string)) {
-                $recommendedAnalyzer = self::mysqlLikeSearch;
+                $recommendedAnalyzer = self::SqlLikeSearch;
             }
 
             $quoteMatch = array();
@@ -153,7 +153,7 @@ class SentenceAnalyzer
     /**
      * @return string
      */
-    public function __sentenceToMysqlExpression()
+    public function __sentenceToSqlExpression()
     {
         return $this->getTerms();
     }
@@ -163,7 +163,7 @@ class SentenceAnalyzer
      */
     public function __toString()
     {
-        return $this->__sentenceToMysqlExpression();
+        return $this->__sentenceToSqlExpression();
     }
 
     /**
@@ -197,7 +197,7 @@ class SentenceAnalyzer
      * @param $string
      * @return bool
      */
-    public static function isMysqlLikeEx($string)
+    public static function isSqlLikeEx($string)
     {
         return (substr_count($string, "LIKE") > 0);
     }
@@ -206,7 +206,7 @@ class SentenceAnalyzer
      * @param $string
      * @return bool
      */
-    public static function isMysqlFulltext($string)
+    public static function isFulltext($string)
     {
         return ((substr_count($string, "REGEXP") == 0) && (substr_count($string, "LIKE") == 0));
     }

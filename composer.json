@@ -1,6 +1,5 @@
 {
     "name": "emma/searchengine",
-    "type": "library",
     "description": "Php - MySql/SQL Search Engine. Considering the challenges in using MySQL/MSSQL/SQL as a back-end for industrial level application search-engine. An optimized techniques and algorithms are developed to boost performance and make SQL databases works like magic for the purpose of searching.",
     "authors": [
         {
@@ -11,10 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=5.5.0",
-        "ext-ctype": "*",
-        "ext-filter": "*",
-        "ext-hash": "*"
+        "php": ">=5.4"
     },
     "autoload": {
         "psr-4": {

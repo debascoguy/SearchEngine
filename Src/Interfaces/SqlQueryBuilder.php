@@ -77,15 +77,4 @@ interface SqlQueryBuilder
      * @return $this
      */
     public function setMasterColumn($rankingFactor);
-
-    /**
-     * @return string
-     */
-    public function generateFullTextSearchQuery();
-
-    /**
-     * @return string
-     */
-    public function generateMysqlLikeOrRegexSearchQuery();
-
 }

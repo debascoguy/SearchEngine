@@ -31,7 +31,7 @@ interface SqlSearchQuery
     /**
      * @return string
      */
-    public function generateMysqlLikeOrRegexSearchQuery();
+    public function generateSqlLikeOrRegexSearchQuery();
 
     /**
      * @param string $subQuery

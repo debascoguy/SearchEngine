@@ -29,7 +29,7 @@ interface SqlLoadDB
     public function setQueryBuilder($QueryBuilder);
 
     /**
-     * @return MysqlFullText|MysqlLike|MysqlRegex|sentenceAnalyzer
+     * @return MysqlFullText|SqlLike|MysqlRegex|sentenceAnalyzer
      */
     public function getSentenceAnalyzer();
 

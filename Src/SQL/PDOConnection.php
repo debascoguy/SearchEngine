@@ -36,12 +36,21 @@ class PDOConnection {
 
     /**
      * @param ConnectionProperty|null $connectionProperty
-     * @return PDOConnection : Active instance of Connection OR create a new one and return it.
+     * @return self
      */
-    public static function getInstance(ConnectionProperty $connectionProperty = null) {
+    public function __construct(ConnectionProperty $connectionProperty = null) 
+    {
+        return $this->connect($connectionProperty);
+    }
+
+    /**
+     * @param ConnectionProperty|null $connectionProperty
+     * @return self : Active instance of Connection OR create a new one and return it.
+     */
+    public static function getInstance(ConnectionProperty $connectionProperty = null) 
+    {
         if (self::$instance == null) {
-            self::$instance = new self();
-            self::$instance->connect($connectionProperty);
+            self::$instance = new self($connectionProperty);
         }
         return self::$instance;
     }
@@ -51,7 +60,8 @@ class PDOConnection {
      *
      * @return bool
      */
-    protected function canSavepoint() {
+    protected function canSavepoint() 
+    {
         return in_array($this->getConnection()->getAttribute(\PDO::ATTR_DRIVER_NAME), DBMS::$supportedDrivers);
     }
 
@@ -59,7 +69,8 @@ class PDOConnection {
      * @return int
      * Only for supported drivers
      */
-    public function savepoint() {
+    public function savepoint() 
+    {
         return $this->getConnection()->exec("SAVEPOINT LEVEL{$this->transactionLevel}");
     }
 
@@ -67,14 +78,16 @@ class PDOConnection {
      * @return int
      * Only for supported drivers
      */
-    public function release_savepoint() {
+    public function release_savepoint() 
+    {
         return $this->getConnection()->exec("RELEASE SAVEPOINT LEVEL{$this->transactionLevel}");
     }
 
     /**
      * @return bool
      */
-    public function beginTransaction() {
+    public function beginTransaction() 
+    {
         if (!$this->getConnection()->inTransaction()) {
             $status = ($this->transactionLevel == 0 || !$this->canSavepoint()) ?
                     $this->getConnection()->beginTransaction() :
@@ -88,7 +101,8 @@ class PDOConnection {
     /**
      * @return bool|int
      */
-    public function commit() {
+    public function commit() 
+    {
         $this->transactionLevel--;
         return ($this->transactionLevel == 0 || !$this->canSavepoint()) ?
                 $this->getConnection()->commit() :
@@ -98,7 +112,8 @@ class PDOConnection {
     /**
      * @return bool|int
      */
-    public function rollback() {
+    public function rollback() 
+    {
         if ($this->transactionLevel == 0) {
             throw new \PDOException('Rollback error : There is no transaction started');
         }
@@ -112,7 +127,8 @@ class PDOConnection {
     /**
      * @return int
      */
-    public function getTransactionLevel() {
+    public function getTransactionLevel() 
+    {
         return $this->transactionLevel;
     }
 
@@ -120,7 +136,8 @@ class PDOConnection {
      * @param ConnectionProperty $connectionProperty
      * @return $this
      */
-    public function connect(ConnectionProperty $connectionProperty) {
+    public function connect(ConnectionProperty $connectionProperty) 
+    {
         $this->setConnectionProperty($connectionProperty);
         $dsn = empty($connectionProperty->getDsn()) ? "{dbms}:host={host};port={port};dbname={db}" : $connectionProperty->getDsn();
         $connectionString = str_replace([
@@ -137,6 +154,7 @@ class PDOConnection {
             (string) $dsn
         );
 
+        $this->close();
         $this->connection = new \PDO($connectionString, $connectionProperty->getUser(), $connectionProperty->getPassword());
         // set the PDO error mode to exception
         $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -152,7 +170,8 @@ class PDOConnection {
     /**
      * @close Connection
      */
-    public function close() {
+    public function close() 
+    {
         $this->connection = null;
     }
 
@@ -162,7 +181,8 @@ class PDOConnection {
      * @param int $fetchMode
      * @return \PDOStatement
      */
-    public function executeQuery($sql, $params = array(), $fetchMode = \PDO::FETCH_ASSOC) {
+    public function executeQuery($sql, $params = array(), $fetchMode = \PDO::FETCH_ASSOC) 
+    {
         if (is_null($fetchMode) || !is_int($fetchMode)) {
             $fetchMode = \PDO::FETCH_ASSOC;
         }
@@ -198,7 +218,8 @@ class PDOConnection {
     /**
      * @return string
      */
-    public function getLastInsertID() {
+    public function getLastInsertID() 
+    {
         return $this->connection->lastInsertId();
     }
 
@@ -206,7 +227,8 @@ class PDOConnection {
      * @param int $resultType
      * @return bool
      */
-    public function setFetchMode($resultType = \PDO::FETCH_ASSOC) {
+    public function setFetchMode($resultType = \PDO::FETCH_ASSOC) 
+    {
         if ($this->isPDOStatement($this->statement)) {
             return $this->statement->setFetchMode($resultType);
         } else {
@@ -218,14 +240,16 @@ class PDOConnection {
     /**
      * @return bool
      */
-    public function setFetchModeAsAssoc() {
+    public function setFetchModeAsAssoc() 
+    {
         return $this->setFetchMode();
     }
 
     /**
      * @return \PDO
      */
-    public function getConnection() {
+    public function getConnection() 
+    {
         return $this->connection;
     }
 
@@ -233,7 +257,8 @@ class PDOConnection {
      * @param \PDO $connection
      * @return PDOConnection
      */
-    public function setConnection($connection) {
+    public function setConnection($connection) 
+    {
         $this->connection = $connection;
         return $this;
     }
@@ -241,7 +266,8 @@ class PDOConnection {
     /**
      * @return int
      */
-    public function getNumberOfAffectedRows() {
+    public function getNumberOfAffectedRows() 
+    {
         return $this->numberOfAffectedRows;
     }
 
@@ -249,7 +275,8 @@ class PDOConnection {
      * @param int $numberOfAffectedRows
      * @return PDOConnection
      */
-    public function setNumberOfAffectedRows($numberOfAffectedRows) {
+    public function setNumberOfAffectedRows($numberOfAffectedRows) 
+    {
         $this->numberOfAffectedRows = $numberOfAffectedRows;
         return $this;
     }
@@ -257,7 +284,8 @@ class PDOConnection {
     /**
      * @return \PDOStatement
      */
-    public function getStatement() {
+    public function getStatement() 
+    {
         return $this->statement;
     }
 
@@ -265,7 +293,8 @@ class PDOConnection {
      * @param \PDOStatement $statement
      * @return PDOConnection
      */
-    public function setStatement($statement) {
+    public function setStatement($statement)
+    {
         $this->statement = $statement;
         return $this;
     }
@@ -274,7 +303,8 @@ class PDOConnection {
      * @param $result
      * @return bool
      */
-    public function isPDOStatement($result) {
+    public function isPDOStatement($result) 
+    {
         return ($result instanceof \PDOStatement);
     }
 
@@ -282,7 +312,8 @@ class PDOConnection {
      * @param $connection
      * @return bool
      */
-    public function isConnection($connection) {
+    public function isConnection($connection) 
+    {
         return ($connection instanceof \PDO);
     }
 
@@ -291,7 +322,8 @@ class PDOConnection {
      * @param string $error
      * @return string
      */
-    public function error($query = '', $error = "") {
+    public function error($query = '', $error = "") 
+    {
         if ($query) {
             echo $query . '<br>';
         }
@@ -308,7 +340,8 @@ class PDOConnection {
     /**
      * @param string $msg
      */
-    public static function logError($msg) {
+    public static function logError($msg) 
+    {
         $msg = strip_tags($msg);
         $msg .= "\nRemote IP: " . $_SERVER['REMOTE_ADDR'] . "\n";
         trigger_error('SQL ERROR: ' . strip_tags($msg), 0); //Will invoke the framework ErrorHandler.

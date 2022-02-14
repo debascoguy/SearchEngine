@@ -116,7 +116,7 @@ class MysqlRegex extends SentenceAnalyzer
     /**
      * @return string
      */
-    public function __sentenceToMysqlExpression()
+    public function __sentenceToSqlExpression()
     {
         $term = $this->getTerms();
         $term = $this->handlesStringQuotes($term, "(", ")");

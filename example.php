@@ -6,6 +6,8 @@
  * Time: 11:32 AM
  */
 
+use SearchEngine\SQL\DBMS;
+
 error_reporting(E_ALL ^ E_NOTICE);
 
 include dirname(__FILE__) . DIRECTORY_SEPARATOR . "autoloader.php";
@@ -28,9 +30,12 @@ include dirname(__FILE__) . DIRECTORY_SEPARATOR . "autoloader.php";
 /** 
  * CREATE MYSQL CONNECTION
  */
-$connection = SearchEngine\SQL\PDOConnection::getInstance(new SearchEngine\SQL\ConnectionProperty("localhost", "root", "", "employees"));
+$prop = new SearchEngine\SQL\ConnectionProperty("localhost", "root", "", "employees");
+$connection = SearchEngine\SQL\PDOConnection::getInstance($prop);
 
 /**
+ * MYSQL
+ * =====
  * EXAMPLE 1: fulltext search example: First, run this SQL on your employees Database:
  * 
  * ALTER TABLE employees ADD FULLTEXT(first_name, last_name);
@@ -129,9 +134,66 @@ $searchEngine = $searchEngine->reset();
 $result3 = $searchEngine->add($fileSystemLoadDB)->search()->getResult();
 
 
-echo "<h3>EXAMPLE 1 - SEARCH RESULT</h3>";
+$pgProp = new SearchEngine\SQL\ConnectionProperty("localhost", "postgres", "@aAbB2021", "moneypally", "5432");
+$pgProp->setDbms(DBMS::PostGreSQL)->setSchema("public");
+$pgconnection = $connection->connect($pgProp);
+
+
+/**
+ * POSTGRESQL
+ * ==========
+ * EXAMPLE 1: FULL-TEXT search
+ * =====================================================================================================================
+ */
+
+/**     SEARCH STRING : The strings to be search inside the database (Boolean Search).  */
+$searchString = "NEGOTIATION_IN_PROGRESS OR BOTH OR WALLET";
+
+$PgSqlLoadDB = new SearchEngine\SQL\SqlLoadDB(
+    $pgconnection,
+    (new SearchEngine\SQL\QueryBuilder())->setTableName("trades"),
+    new SearchEngine\SentenceAnalyzer\PostgreSqlFullText(
+        $searchString, 
+        ["trades.status", "trades.fund_source_name", "trades.trade_method"],
+        SearchEngine\SentenceAnalyzer\PostgreSqlFullText::SEARCH_NOT_INDEXED
+    )
+);
+
+$searchEngine = new SearchEngine\SearchEngine();
+$pgresult = $searchEngine->add($PgSqlLoadDB)->search()->getResult();
+
+
+/** 
+ * POSTGRESQL
+ * ==========
+ * EXAMPLE 2 : LIKE - statement
+ * =====================================================================================================================
+ */
+$PgSqlLoadDB2 = new SearchEngine\SQL\SqlLoadDB(
+    $pgconnection,
+    (new SearchEngine\SQL\QueryBuilder())->setTableName("trades"),
+    new SearchEngine\SentenceAnalyzer\PostgreSqlLike($searchString)
+);
+
+//Now, Search
+$searchEngine = $searchEngine->reset();
+$searchEngine->add($PgSqlLoadDB2)->registerResultCallBack(function ($searchResult) {
+    while (count($searchResult) < 4095) {
+        $result2 = $searchResult;
+        $searchResult = array_merge($searchResult, $result2);
+    }
+    return $searchResult;
+});
+$pgresult2 = $searchEngine->search()->getResult();
+
+
+echo "<h3>MYSQL EXAMPLE 1 - SEARCH RESULT</h3>";
 var_dump($result);
-echo "<h3>EXAMPLE 2 - SEARCH RESULT</h3>";
+echo "<h3>MYSQL EXAMPLE 2 - SEARCH RESULT</h3>";
 var_dump($result2);
-echo "<h3>EXAMPLE 3 - SEARCH RESULT</h3>";
+echo "<h3>MYSQL EXAMPLE 3 - SEARCH RESULT</h3>";
 var_dump($result3);
+echo "<h3>PGSQL - EXAMPLE 1 - SEARCH RESULT</h3>";
+var_dump($pgresult);
+echo "<h3>PGSQL - EXAMPLE 2 - SEARCH RESULT</h3>";
+var_dump($pgresult2);

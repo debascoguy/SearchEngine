@@ -1,9 +1,11 @@
 <?php
 
 namespace SearchEngine\SQL;
-use Emma\ServiceManager\Singleton;
 use SearchEngine\Interfaces\SqlQueryBuilder;
 use SearchEngine\SentenceAnalyzer\MysqlFullText;
+use SearchEngine\SentenceAnalyzer\MysqlLike;
+use SearchEngine\SentenceAnalyzer\PostgreSqlFullText;
+use SearchEngine\SentenceAnalyzer\PostgreSqlLike;
 use SearchEngine\SentenceAnalyzer\SentenceAnalyzer;
 
 /**
@@ -690,30 +692,17 @@ class QueryBuilder implements SqlQueryBuilder
     /**
      * @return string
      */
-    public function generateFullTextSearchQuery()
-    {
-        $searchQuery = new SearchQuery($this);
-        return $searchQuery->generateFullTextSearchQuery();
-    }
-
-    /**
-     * @return string
-     */
-    public function generateMysqlLikeOrRegexSearchQuery()
-    {
-        $searchQuery = new SearchQuery($this);
-        return $searchQuery->generateMysqlLikeOrRegexSearchQuery();
-    }
-
-    /**
-     * @return string
-     */
     public function __toString()
     {
-        if ($this->getSentenceAnalyzer() instanceof MysqlFullText) {
-            return $this->generateFullTextSearchQuery();
-        } else {
-            return $this->generateMysqlLikeOrRegexSearchQuery();
+        $sentenceAnalyzer = $this->getSentenceAnalyzer();
+        if ($sentenceAnalyzer instanceof PostgreSqlFullText || $sentenceAnalyzer instanceof PostgreSqlLike) {
+            return (new PostgreSqlSearchQuery($this))->__toString();
+        }
+        else if ($sentenceAnalyzer instanceof MysqlFullText || $sentenceAnalyzer instanceof MysqlLike) {
+            return (new MySqlSearchQuery($this))->__toString();
+        }
+        else{
+            return (new SearchQuery($this))->__toString();
         }
     }
 

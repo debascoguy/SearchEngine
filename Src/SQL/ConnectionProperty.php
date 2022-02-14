@@ -11,6 +11,7 @@ class ConnectionProperty
     private $socket = '';
     private $dbms = DBMS::MYSQL; //There are other fully supported dbms inside the DBMS class...
     private $dsn = ""; //If connection failed, try specifying the PDO connection string using the 'dsn' field.
+    private $schema = ''; //Postgre Users with different schemas
 
 
     /**
@@ -33,6 +34,7 @@ class ConnectionProperty
         $this->socket = !empty($socket) ? $socket : '';
         $this->dbms = !empty($dbms) ? $dbms : DBMS::MYSQL;
         $this->dsn = $dsn;
+        $this->schema = $database; //Default. Feel free to call the Setter function to change.
     }
 
     /**
@@ -176,6 +178,24 @@ class ConnectionProperty
     public function setDsn($dsn)
     {
         $this->dsn = $dsn;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */ 
+    public function getSchema()
+    {
+        return $this->schema;
+    }
+
+    /**
+     * @param string $schema
+     * @return  self
+     */ 
+    public function setSchema($schema)
+    {
+        $this->schema = $schema;
         return $this;
     }
 }

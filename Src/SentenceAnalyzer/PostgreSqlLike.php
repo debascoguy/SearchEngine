@@ -4,7 +4,7 @@ namespace SearchEngine\SentenceAnalyzer;
 
 use SearchEngine\SentenceAnalyzer\SqlLike;
 
-class MysqlLike extends SqlLike
+class PostgreSqlLike extends SqlLike
 {
     
 }

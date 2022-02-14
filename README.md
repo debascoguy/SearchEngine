@@ -100,7 +100,7 @@ $mysqlQueryBuilder->select(array(
 $SqlLoadDB2 = new SearchEngine\SQL\SqlLoadDB(
     $connection,
     $mysqlQueryBuilder,
-    new SearchEngine\SentenceAnalyzer\MysqlLike($searchString)
+    new SearchEngine\SentenceAnalyzer\SqlLike($searchString)
 );
 //Now, Search
 $searchEngine = $searchEngine->reset();
